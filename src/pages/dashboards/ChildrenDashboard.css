@@ -1,0 +1,1028 @@
+/* Children Dashboard - Magical Forest Theme */
+.children-dashboard {
+  min-height: 100vh;
+  background-image: url('../../assets/forest-background.svg');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+  font-family: 'Comic Sans MS', 'Trebuchet MS', cursive, sans-serif;
+  position: relative;
+  overflow-x: hidden;
+}
+
+/* Animated Animal Pictures */
+.forest-animals {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+  z-index: 1;
+  overflow: hidden;
+}
+
+.animal {
+  position: absolute;
+  font-size: 40px;
+  animation-duration: 15s;
+  animation-iteration-count: infinite;
+  animation-timing-function: ease-in-out;
+}
+
+/* Rabbit - Top left */
+.rabbit {
+  top: 50%;
+  left: 5%;
+  animation-name: rabbitHop;
+  font-size: 100px;
+}
+
+/* Squirrel - Top right */
+.squirrel {
+  top: 20%;
+  right: 8%;
+  animation-name: squirrelRun;
+  font-size: 100px;
+}
+
+/* Butterfly - Center top */
+.butterfly {
+  top: 60%;
+  left: 5%;
+  transform: translateX(-50%);
+  animation-name: butterflyFloat;
+  font-size: 100px;
+}
+
+/* Bird - Flying across */
+.bird {
+  top: 27%;
+  left: 0%;
+  animation-name: birdFly;
+  font-size: 100px;
+}
+
+/* Bee - Buzzing around */
+.bee {
+  top: 50%;
+  right: -3%;
+  animation-name: beeBuzz;
+  font-size: 100px;
+}
+
+/* Ladybug - On ground */
+.ladybug {
+  bottom: 25%;
+  left: 8%;
+  animation-name: ladybugCrawl;
+  font-size: 100px;
+}
+
+/* Caterpillar - Moving slowly */
+.caterpillar {
+  bottom: 30%;
+  right: 20%;
+  animation-name: caterpillarCrawl;
+}
+
+/* Parrot - In tree */
+.parrot {
+  top: 75%;
+  left: 5%;
+  animation-name: parrotSway;
+  font-size: 100px;
+}
+
+/* Owl - Night watch */
+.owl {
+  top: 20%;
+  right: 25%;
+  animation-name: owlBlink;
+}
+
+/* Deer - Grazing */
+.deer {
+  bottom: 20%;
+  left: 50%;
+  transform: translateX(-50%);
+  animation-name: deerGrazing;
+}
+
+/* Fox - Sneaking */
+.fox {
+  bottom: 37%;
+  right: 5%;
+  animation-name: foxSneak;
+  font-size: 100px;
+}
+
+/* Hedgehog - Rolling */
+.hedgehog {
+  bottom: 27%;
+  right: 5%;
+  font-size: 100px;
+  animation-name: hedgehogRoll;
+}
+
+/* Frog - Jumping */
+.frog {
+  bottom: 45%;
+  right: 30%;
+  animation-name: frogJump;
+}
+
+/* Large Animals - Peeking from corners */
+.lion-peek {
+  top: 0%;
+  left: -5%;
+  font-size: 200px;
+  animation-name: lionPeek;
+  z-index: 2;
+}
+
+.bear-peek {
+  rotate: 20deg;
+  bottom: -2%;
+  left: -8%;
+  font-size: 300px;
+  animation-name: bearPeek;
+  z-index: 2;
+}
+
+.elephant-peek {
+  top: 13%;
+  left: 0%;
+  font-size: 250px;
+  animation-name: elephantPeek;
+  z-index: 2;
+}
+
+.giraffe-peek {
+  rotate: -20deg;
+  top: -1%;
+  right: -13%;
+  font-size: 350px;
+  animation-name: giraffePeek;
+  z-index: 2;
+}
+
+.rhino-peek {
+  rotate: 20deg;
+  bottom: -6%;
+  right: -10%;
+  font-size: 325px;
+  animation-name: rhinoPeek;
+  z-index: 2;
+}
+
+.hippo-peek {
+  bottom: 10%;
+  right: -12%;
+  font-size: 350px;
+  animation-name: hippoPeek;
+  z-index: 2;
+}
+
+.tiger-peek {
+  top: 25%;
+  right: -10%;
+  font-size: 300px;
+  animation-name: tigerPeek;
+  z-index: 2;
+}
+
+.panda-peek {
+  top: 28%;
+  left: -8%;
+  font-size: 250px;
+  animation-name: pandaPeek;
+  z-index: 2;
+}
+
+/* Forest Header Styling */
+.children-header {
+  background: rgba(34, 139, 34, 0.3);
+  backdrop-filter: blur(10px);
+  color: white;
+  padding: 20px 0;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  position: relative;
+  overflow: hidden;
+  border-bottom: 4px solid rgba(0, 100, 0, 0.5);
+}
+
+.children-header::before {
+  content: '🌳 🌲 🌿 🍄 🦋 🐿️ 🌸 🌺 🌳 🌲';
+  position: absolute;
+  top: 10px;
+  left: 0;
+  right: 0;
+  font-size: 24px;
+  text-align: center;
+  animation: forestFloat 4s ease-in-out infinite;
+  opacity: 0.8;
+}
+
+.children-header-content {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  position: relative;
+  z-index: 1;
+}
+
+.children-header h1 {
+  font-size: 48px;
+  margin: 0;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+  background: linear-gradient(45deg, #FFD700, #32CD32, #00FF7F, #00CED1);
+  background-size: 400% 400%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: gradientShift 3s ease infinite;
+}
+
+.children-user-info {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.children-welcome {
+  font-size: 24px;
+  font-weight: bold;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+  background: rgba(255, 255, 255, 0.2);
+  padding: 10px 20px;
+  border-radius: 25px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+}
+
+.children-logout-btn {
+  background: linear-gradient(135deg, #ff6b6b, #ee5a24);
+  color: white;
+  border: none;
+  padding: 15px 25px;
+  border-radius: 25px;
+  font-size: 18px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(255, 107, 107, 0.3);
+  font-family: 'Comic Sans MS', cursive;
+}
+
+.children-logout-btn:hover {
+  transform: translateY(-3px) scale(1.05);
+  box-shadow: 0 8px 25px rgba(255, 107, 107, 0.4);
+}
+
+/* Main Content - Forest Theme */
+.children-main {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 30px 20px;
+  position: relative;
+  z-index: 2;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  border-radius: 20px;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+}
+
+/* Welcome Section - Forest Theme */
+.children-welcome-section {
+  background: linear-gradient(135deg, #98FB98 0%, #90EE90 50%, #8FBC8F 100%);
+  border-radius: 25px;
+  padding: 40px;
+  margin-bottom: 30px;
+  text-align: center;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+  border: 3px solid #228B22;
+  position: relative;
+  overflow: hidden;
+}
+
+.children-welcome-section::before {
+  content: '🌿 🍃 🌱 🌿 🍃 🌱 🌿 🍃 🌱 🌿';
+  position: absolute;
+  top: 15px;
+  left: 0;
+  right: 0;
+  font-size: 20px;
+  animation: leafFloat 6s ease-in-out infinite;
+  opacity: 0.8;
+}
+
+.children-welcome-section h2 {
+  font-size: 42px;
+  margin: 30px 0 20px 0;
+  color: #2c3e50;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+  background: linear-gradient(45deg, #e74c3c, #f39c12, #f1c40f, #2ecc71);
+  background-size: 400% 400%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: gradientShift 4s ease infinite;
+}
+
+.children-welcome-section p {
+  font-size: 22px;
+  color: #34495e;
+  margin: 0;
+  line-height: 1.6;
+  font-weight: 500;
+}
+
+/* Personal Info Section */
+.children-info-section {
+  background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+  border-radius: 25px;
+  padding: 30px;
+  margin-bottom: 30px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+  border: 3px solid #fff;
+}
+
+.children-info-section h3 {
+  font-size: 32px;
+  margin: 0 0 25px 0;
+  color: #2c3e50;
+  text-align: center;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.children-info-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 20px;
+}
+
+.children-info-item {
+  background: rgba(255, 255, 255, 0.8);
+  padding: 20px;
+  border-radius: 15px;
+  border: 2px solid #fff;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+}
+
+.children-info-item:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+.children-info-item h4 {
+  font-size: 20px;
+  margin: 0 0 10px 0;
+  color: #e74c3c;
+  font-weight: bold;
+}
+
+.children-info-item p {
+  font-size: 18px;
+  margin: 0;
+  color: #2c3e50;
+  font-weight: 500;
+}
+
+/* Quiz Section */
+.children-quiz-section {
+  background: linear-gradient(135deg, #ffd700 0%, #ffa500 100%);
+  border-radius: 25px;
+  padding: 30px;
+  box-shadow: 0 10px 30px rgba(255, 165, 0, 0.2);
+  border: 3px solid #fff;
+  margin: 40px 0;
+}
+
+.children-quiz-section h3 {
+  font-size: 32px;
+  margin: 0 0 25px 0;
+  color: #2c3e50;
+  text-align: center;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
+  font-weight: 600;
+}
+
+.children-quiz-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 20px;
+  margin-top: 20px;
+}
+
+/* Activities Section */
+.children-activities-section {
+  background: linear-gradient(135deg, #d299c2 0%, #fef9d7 100%);
+  border-radius: 25px;
+  padding: 30px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+  border: 3px solid #fff;
+}
+
+.children-activities-section h3 {
+  font-size: 32px;
+  margin: 0 0 25px 0;
+  color: #2c3e50;
+  text-align: center;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.children-activities-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 25px;
+}
+
+.children-activity-card {
+  background: linear-gradient(135deg, #F0FFF0 0%, #E6FFE6 50%, #CCFFCC 100%);
+  border-radius: 20px;
+  padding: 25px;
+  text-align: center;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+  border: 3px solid #32CD32;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.children-activity-card::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+  transform: rotate(45deg);
+  transition: all 0.6s;
+  opacity: 0;
+}
+
+.children-activity-card:hover::before {
+  animation: shine 0.6s ease-in-out;
+}
+
+.children-activity-card:hover {
+  transform: translateY(-8px) scale(1.02);
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+}
+
+.children-activity-card h4 {
+  font-size: 24px;
+  margin: 0 0 15px 0;
+  color: #2c3e50;
+  font-weight: bold;
+}
+
+.children-activity-card p {
+  font-size: 18px;
+  color: #34495e;
+  margin: 0 0 20px 0;
+  line-height: 1.5;
+}
+
+.children-action-btn {
+  background: linear-gradient(135deg, #32CD32, #228B22);
+  color: white;
+  border: none;
+  padding: 15px 30px;
+  border-radius: 25px;
+  font-size: 18px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(50, 205, 50, 0.3);
+  font-family: 'Comic Sans MS', cursive;
+  min-width: 150px;
+  position: relative;
+  overflow: hidden;
+}
+
+.children-action-btn::before {
+  content: '🌿';
+  position: absolute;
+  top: 5px;
+  left: 10px;
+  font-size: 16px;
+  animation: leafBounce 2s ease-in-out infinite;
+}
+
+.children-action-btn:hover:not(:disabled) {
+  transform: translateY(-3px) scale(1.05);
+  box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+}
+
+.children-action-btn:disabled {
+  background: #bdc3c7;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+/* Quiz Card Special Styling */
+.children-quiz-card {
+  background: linear-gradient(135deg, #fef3c7, #fbbf24);
+  border: 4px solid #f59e0b;
+  animation: pulse 2s infinite;
+  position: relative;
+}
+
+.children-quiz-card::after {
+  content: '🧮';
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  font-size: 30px;
+  animation: bounce 1s infinite;
+}
+
+.children-completed-quiz {
+  background: linear-gradient(135deg, #d1fae5, #10b981);
+  border: 4px solid #059669;
+  position: relative;
+}
+
+.children-completed-quiz::after {
+  content: '✅';
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  font-size: 30px;
+  animation: bounce 1s infinite;
+}
+
+.children-quiz-btn {
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  color: white;
+  font-weight: bold;
+  font-size: 20px;
+  padding: 18px 35px;
+  border-radius: 30px;
+  box-shadow: 0 6px 20px rgba(245, 158, 11, 0.4);
+}
+
+.children-quiz-btn:hover {
+  background: linear-gradient(135deg, #d97706, #b45309);
+  transform: translateY(-4px) scale(1.08);
+  box-shadow: 0 10px 30px rgba(245, 158, 11, 0.5);
+}
+
+/* Animations */
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+}
+
+@keyframes bounce {
+  0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+  40% { transform: translateY(-10px); }
+  60% { transform: translateY(-5px); }
+}
+
+@keyframes pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.03); }
+  100% { transform: scale(1); }
+}
+
+@keyframes gradientShift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+@keyframes shine {
+  0% { transform: translateX(-100%) translateY(-100%) rotate(45deg); opacity: 0; }
+  50% { opacity: 1; }
+  100% { transform: translateX(100%) translateY(100%) rotate(45deg); opacity: 0; }
+}
+
+/* Performance Summary Styles */
+.performance-summary {
+  margin: 15px 0;
+  padding: 15px;
+  background: rgba(255, 255, 255, 0.8);
+  border-radius: 12px;
+  border: 2px solid #fff;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.performance-badge-small {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border-radius: 20px;
+  color: white;
+  font-weight: bold;
+  font-size: 14px;
+  margin-bottom: 10px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+}
+
+.badge-emoji-small {
+  font-size: 18px;
+}
+
+.badge-text {
+  font-size: 14px;
+}
+
+.performance-stats-small {
+  display: flex;
+  gap: 15px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.performance-stats-small span {
+  background: rgba(255, 255, 255, 0.9);
+  padding: 6px 12px;
+  border-radius: 15px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #2c3e50;
+  border: 1px solid #e5e7eb;
+}
+
+/* Level Progress Summary */
+.level-progress-summary {
+  display: flex;
+  gap: 15px;
+  justify-content: center;
+  margin: 15px 0;
+  flex-wrap: wrap;
+}
+
+.level-progress-summary .progress-item {
+  background: rgba(255, 255, 255, 0.9);
+  padding: 8px 16px;
+  border-radius: 20px;
+  border: 2px solid #fff;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.3s ease;
+}
+
+.level-progress-summary .progress-item:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+}
+
+.level-progress-summary .progress-icon {
+  font-size: 18px;
+}
+
+.level-progress-summary .progress-text {
+  font-size: 14px;
+  font-weight: 600;
+  color: #2c3e50;
+}
+
+/* Assessment Info Styles */
+.assessment-info {
+  display: flex;
+  gap: 15px;
+  justify-content: center;
+  margin: 15px 0;
+  flex-wrap: wrap;
+}
+
+.assessment-info .info-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(255, 255, 255, 0.9);
+  padding: 8px 16px;
+  border-radius: 20px;
+  border: 2px solid #fff;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+}
+
+.assessment-info .info-item:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+}
+
+.assessment-info .info-icon {
+  font-size: 18px;
+}
+
+.assessment-info .info-text {
+  font-size: 14px;
+  font-weight: 600;
+  color: #2c3e50;
+}
+
+/* Performance Category Info */
+.performance-category-info {
+  margin: 15px 0;
+  text-align: center;
+}
+
+.category-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  border-radius: 25px;
+  color: white;
+  font-weight: bold;
+  font-size: 16px;
+  margin-bottom: 10px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+  animation: pulse 2s infinite;
+}
+
+.category-emoji {
+  font-size: 20px;
+}
+
+.category-text {
+  font-size: 16px;
+}
+
+.category-description {
+  font-size: 14px;
+  color: #6b7280;
+  margin: 0;
+  font-style: italic;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .children-header h1 {
+    font-size: 36px;
+  }
+  
+  .children-welcome {
+    font-size: 20px;
+    padding: 8px 16px;
+  }
+  
+  .children-logout-btn {
+    padding: 12px 20px;
+    font-size: 16px;
+  }
+  
+  .children-welcome-section h2 {
+    font-size: 32px;
+  }
+  
+  .children-welcome-section p {
+    font-size: 18px;
+  }
+  
+  .children-info-section h3,
+  .children-quiz-section h3,
+  .children-activities-section h3 {
+    font-size: 28px;
+  }
+  
+  .children-activity-card h4 {
+    font-size: 20px;
+  }
+  
+  .children-activity-card p {
+    font-size: 16px;
+  }
+  
+  .children-action-btn {
+    font-size: 16px;
+    padding: 12px 24px;
+  }
+  
+  .children-quiz-btn {
+    font-size: 18px;
+    padding: 15px 30px;
+  }
+}
+
+@media (max-width: 480px) {
+  .children-header-content {
+    flex-direction: column;
+    gap: 15px;
+  }
+  
+  .children-header h1 {
+    font-size: 28px;
+  }
+  
+  .children-main {
+    padding: 20px 15px;
+  }
+  
+  .children-welcome-section,
+  .children-info-section,
+  .children-quiz-section,
+  .children-activities-section {
+    padding: 20px;
+  }
+  
+  .children-activities-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Forest Theme Animations */
+@keyframes forestFloat {
+  0%, 100% { transform: translateY(0px) rotate(0deg); }
+  25% { transform: translateY(-10px) rotate(1deg); }
+  50% { transform: translateY(-5px) rotate(-1deg); }
+  75% { transform: translateY(-15px) rotate(0.5deg); }
+}
+
+@keyframes animalFloat {
+  0%, 100% { transform: translateX(0px) translateY(0px); }
+  25% { transform: translateX(20px) translateY(-10px); }
+  50% { transform: translateX(40px) translateY(0px); }
+  75% { transform: translateX(20px) translateY(10px); }
+}
+
+@keyframes leafFloat {
+  0%, 100% { transform: translateY(0px) rotate(0deg); }
+  33% { transform: translateY(-5px) rotate(2deg); }
+  66% { transform: translateY(-10px) rotate(-1deg); }
+}
+
+@keyframes leafBounce {
+  0%, 100% { transform: translateY(0px) rotate(0deg); }
+  50% { transform: translateY(-3px) rotate(5deg); }
+}
+
+@keyframes gradientShift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+@keyframes bounce {
+  0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+  40% { transform: translateY(-10px); }
+  60% { transform: translateY(-5px); }
+}
+
+@keyframes shine {
+  0% { transform: translateX(-100%) translateY(-100%) rotate(45deg); opacity: 0; }
+  50% { opacity: 1; }
+  100% { transform: translateX(100%) translateY(100%) rotate(45deg); opacity: 0; }
+}
+
+@keyframes pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+  100% { transform: scale(1); }
+}
+
+/* Animal Animations */
+@keyframes rabbitHop {
+  0%, 100% { transform: translateY(0px) translateX(0px); }
+  25% { transform: translateY(-20px) translateX(10px) rotate(5deg); }
+  50% { transform: translateY(-10px) translateX(20px) rotate(-3deg); }
+  75% { transform: translateY(-15px) translateX(30px) rotate(2deg); }
+}
+
+@keyframes squirrelRun {
+  0%, 100% { transform: translateX(0px) translateY(0px) rotate(0deg); }
+  25% { transform: translateX(15px) translateY(-5px) rotate(3deg); }
+  50% { transform: translateX(30px) translateY(0px) rotate(-2deg); }
+  75% { transform: translateX(45px) translateY(-8px) rotate(4deg); }
+}
+
+@keyframes butterflyFloat {
+  0%, 100% { transform: translateX(-50%) translateY(0px) rotate(0deg); }
+  25% { transform: translateX(-40%) translateY(-15px) rotate(10deg); }
+  50% { transform: translateX(-60%) translateY(-10px) rotate(-8deg); }
+  75% { transform: translateX(-45%) translateY(-20px) rotate(12deg); }
+}
+
+@keyframes birdFly {
+  0% { transform: translateX(0px) translateY(0px) rotate(0deg); }
+  25% { transform: translateX(25vw) translateY(-10px) rotate(5deg); }
+  50% { transform: translateX(50vw) translateY(5px) rotate(-3deg); }
+  75% { transform: translateX(75vw) translateY(-8px) rotate(4deg); }
+  100% { transform: translateX(100vw) translateY(0px) rotate(0deg); }
+}
+
+@keyframes beeBuzz {
+  0%, 100% { transform: translateX(0px) translateY(0px) rotate(0deg); }
+  25% { transform: translateX(-10px) translateY(-15px) rotate(8deg); }
+  50% { transform: translateX(5px) translateY(-8px) rotate(-6deg); }
+  75% { transform: translateX(-5px) translateY(-12px) rotate(4deg); }
+}
+
+@keyframes ladybugCrawl {
+  0%, 100% { transform: translateX(0px) translateY(0px) rotate(0deg); }
+  25% { transform: translateX(20px) translateY(-2px) rotate(2deg); }
+  50% { transform: translateX(40px) translateY(0px) rotate(-1deg); }
+  75% { transform: translateX(60px) translateY(-3px) rotate(1deg); }
+}
+
+@keyframes caterpillarCrawl {
+  0%, 100% { transform: translateX(0px) translateY(0px) rotate(0deg); }
+  25% { transform: translateX(-15px) translateY(-1px) rotate(1deg); }
+  50% { transform: translateX(-30px) translateY(0px) rotate(-1deg); }
+  75% { transform: translateX(-45px) translateY(-2px) rotate(0.5deg); }
+}
+
+@keyframes parrotSway {
+  0%, 100% { transform: translateX(0px) translateY(0px) rotate(0deg); }
+  25% { transform: translateX(5px) translateY(-8px) rotate(3deg); }
+  50% { transform: translateX(0px) translateY(-12px) rotate(0deg); }
+  75% { transform: translateX(-5px) translateY(-8px) rotate(-3deg); }
+}
+
+@keyframes owlBlink {
+  0%, 90%, 100% { transform: scaleY(1); }
+  95% { transform: scaleY(0.1); }
+}
+
+@keyframes deerGrazing {
+  0%, 100% { transform: translateX(-50%) translateY(0px) rotate(0deg); }
+  25% { transform: translateX(-45%) translateY(-5px) rotate(2deg); }
+  50% { transform: translateX(-55%) translateY(-3px) rotate(-1deg); }
+  75% { transform: translateX(-48%) translateY(-7px) rotate(1deg); }
+}
+
+@keyframes foxSneak {
+  0%, 100% { transform: translateX(0px) translateY(0px) rotate(0deg); }
+  25% { transform: translateX(-20px) translateY(-3px) rotate(2deg); }
+  50% { transform: translateX(-40px) translateY(0px) rotate(-1deg); }
+  75% { transform: translateX(-60px) translateY(-2px) rotate(1deg); }
+}
+
+@keyframes hedgehogRoll {
+  0%, 100% { transform: translateX(0px) translateY(0px) rotate(0deg); }
+  25% { transform: translateX(15px) translateY(-5px) rotate(90deg); }
+  50% { transform: translateX(30px) translateY(0px) rotate(180deg); }
+  75% { transform: translateX(45px) translateY(-3px) rotate(270deg); }
+}
+
+@keyframes frogJump {
+  0%, 100% { transform: translateX(0px) translateY(0px) rotate(0deg); }
+  25% { transform: translateX(10px) translateY(-25px) rotate(5deg); }
+  50% { transform: translateX(20px) translateY(-15px) rotate(-3deg); }
+  75% { transform: translateX(30px) translateY(-20px) rotate(4deg); }
+}
+
+/* Large Animal Peek Animations */
+@keyframes lionPeek {
+  0%, 70%, 100% { transform: translateX(0px) translateY(0px) rotate(0deg); opacity: 0.8; }
+  10%, 60% { transform: translateX(-20px) translateY(5px) rotate(-5deg); opacity: 1; }
+  35% { transform: translateX(-10px) translateY(0px) rotate(-2deg); opacity: 0.9; }
+}
+
+@keyframes bearPeek {
+  0%, 70%, 100% { transform: translateX(0px) translateY(0px) rotate(0deg); opacity: 0.8; }
+  10%, 60% { transform: translateX(15px) translateY(-8px) rotate(8deg); opacity: 1; }
+  35% { transform: translateX(8px) translateY(-4px) rotate(4deg); opacity: 0.9; }
+}
+
+@keyframes elephantPeek {
+  0%, 75%, 100% { transform: translateX(0px) translateY(0px) rotate(0deg); opacity: 0.7; }
+  15%, 60% { transform: translateX(25px) translateY(3px) rotate(-3deg); opacity: 1; }
+  40% { transform: translateX(15px) translateY(1px) rotate(-1deg); opacity: 0.9; }
+}
+
+@keyframes giraffePeek {
+  0%, 80%, 100% { transform: translateX(0px) translateY(0px) rotate(0deg); opacity: 0.8; }
+  10%, 70% { transform: translateX(-15px) translateY(10px) rotate(5deg); opacity: 1; }
+  30% { transform: translateX(-8px) translateY(5px) rotate(2deg); opacity: 0.9; }
+  50% { transform: translateX(-12px) translateY(7px) rotate(3deg); opacity: 0.95; }
+}
+
+@keyframes rhinoPeek {
+  0%, 70%, 100% { transform: translateX(0px) translateY(0px) rotate(0deg); opacity: 0.8; }
+  10%, 60% { transform: translateX(-18px) translateY(-5px) rotate(-4deg); opacity: 1; }
+  35% { transform: translateX(-10px) translateY(-2px) rotate(-2deg); opacity: 0.9; }
+}
+
+@keyframes hippoPeek {
+  0%, 75%, 100% { transform: translateX(0px) translateY(0px) rotate(0deg); opacity: 0.8; }
+  15%, 60% { transform: translateX(20px) translateY(-3px) rotate(6deg); opacity: 1; }
+  40% { transform: translateX(12px) translateY(-1px) rotate(3deg); opacity: 0.9; }
+}
+
+@keyframes tigerPeek {
+  0%, 70%, 100% { transform: translateX(0px) translateY(0px) rotate(0deg); opacity: 0.8; }
+  10%, 60% { transform: translateX(22px) translateY(2px) rotate(-6deg); opacity: 1; }
+  35% { transform: translateX(12px) translateY(1px) rotate(-3deg); opacity: 0.9; }
+}
+
+@keyframes pandaPeek {
+  0%, 80%, 100% { transform: translateX(0px) translateY(0px) rotate(0deg); opacity: 0.8; }
+  10%, 70% { transform: translateX(-20px) translateY(3px) rotate(4deg); opacity: 1; }
+  30% { transform: translateX(-12px) translateY(1px) rotate(2deg); opacity: 0.9; }
+  50% { transform: translateX(-16px) translateY(2px) rotate(3deg); opacity: 0.95; }
+}
