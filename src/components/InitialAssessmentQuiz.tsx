@@ -485,12 +485,7 @@ const InitialAssessmentQuiz: React.FC<InitialAssessmentQuizProps> = ({ onComplet
   if (questions.length === 0) {
     return (
       <div className="math-quiz">
-        <div className="loading-container">
-          <div className="loading-spinner">
-            <div className="spinner"></div>
-            <p>Preparing your assessment...</p>
-          </div>
-        </div>
+        <div className="loading">Preparing your assessment...</div>
       </div>
     );
   }

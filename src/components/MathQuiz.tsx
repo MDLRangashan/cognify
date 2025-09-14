@@ -256,12 +256,7 @@ const MathQuiz: React.FC<MathQuizProps> = ({ onComplete }) => {
   if (questions.length === 0) {
     return (
       <div className="math-quiz">
-        <div className="loading-container">
-          <div className="loading-spinner">
-            <div className="spinner"></div>
-            <p>Preparing your quiz...</p>
-          </div>
-        </div>
+        <div className="loading">Preparing your quiz...</div>
       </div>
     );
   }

@@ -1,4 +1,15 @@
 /* Children Dashboard - Magical Forest Theme */
+
+/* Loading Styles */
+.loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 400px;
+  font-size: 1.2rem;
+  color: #6b7280;
+}
+
 .children-dashboard {
   min-height: 100vh;
   background-image: url('../../assets/forest-background.svg');

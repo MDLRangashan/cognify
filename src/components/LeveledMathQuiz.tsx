@@ -582,12 +582,7 @@ const LeveledMathQuiz: React.FC<LeveledMathQuizProps> = ({ level, onComplete, on
   if (questions.length === 0) {
     return (
       <div className="math-quiz">
-        <div className="loading-container">
-          <div className="loading-spinner">
-            <div className="spinner"></div>
-            <p>Preparing your {level.title} quiz...</p>
-          </div>
-        </div>
+        <div className="loading">Preparing your {level.title} quiz...</div>
       </div>
     );
   }

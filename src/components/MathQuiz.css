@@ -381,6 +381,15 @@
   box-shadow: 0 6px 12px rgba(59, 130, 246, 0.3);
 }
 
+.loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 400px;
+  font-size: 1.2rem;
+  color: #6b7280;
+}
+
 .loading-container {
   display: flex;
   justify-content: center;

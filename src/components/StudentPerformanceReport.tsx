@@ -811,12 +811,7 @@ const StudentPerformanceReport: React.FC<StudentPerformanceReportProps> = ({
   if (loading) {
     return (
       <div className="performance-report">
-        <div className="loading-container">
-          <div className="loading-spinner">
-            <div className="spinner"></div>
-            <p>Loading performance data...</p>
-          </div>
-        </div>
+        <div className="loading">Loading performance data...</div>
       </div>
     );
   }

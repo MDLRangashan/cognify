@@ -199,12 +199,7 @@ const CapturedImagesGallery: React.FC<CapturedImagesGalleryProps> = ({ isOpen, o
         
         <div className="images-gallery-content">
           {loading ? (
-            <div className="loading-container">
-              <div className="loading-spinner">
-                <div className="spinner"></div>
-                <p>Loading your photos...</p>
-              </div>
-            </div>
+            <div className="loading">Loading your photos...</div>
           ) : error ? (
             <div className="error-container">
               <p>❌ {error}</p>

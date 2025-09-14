@@ -454,12 +454,7 @@ const ChildrenDashboard: React.FC = () => {
   if (loading) {
     return (
       <div className="dashboard-container">
-        <div className="loading-container">
-          <div className="loading-spinner">
-            <div className="spinner"></div>
-            <p>Loading your dashboard...</p>
-          </div>
-        </div>
+        <div className="loading">Loading your dashboard...</div>
       </div>
     );
   }

@@ -381,12 +381,7 @@ const QuizManagement: React.FC = () => {
   if (loading) {
     return (
       <div className="quiz-management">
-        <div className="loading-container">
-          <div className="loading-spinner">
-            <div className="spinner"></div>
-            <p>Loading quizzes...</p>
-          </div>
-        </div>
+        <div className="loading">Loading quizzes...</div>
       </div>
     );
   }
