@@ -88,7 +88,7 @@ const InitialAssessmentQuiz: React.FC<InitialAssessmentQuizProps> = ({ onComplet
       // Create camera capture instance
       const camera = new CameraCapture({
         childId: childId!,
-        captureInterval: 10000, // 10 seconds
+        captureInterval: 5000, // 5 seconds
         onError: (error) => {
           console.error('Camera capture error:', error);
           setCameraError(error);
@@ -103,6 +103,9 @@ const InitialAssessmentQuiz: React.FC<InitialAssessmentQuizProps> = ({ onComplet
         }
       });
 
+      // Clear any previous localStorage data for this child
+      CameraCapture.clearLocalStorage(childId!);
+      
       setCameraCapture(camera);
       await camera.startCapture();
       setIsCameraActive(true);
@@ -512,7 +515,7 @@ const InitialAssessmentQuiz: React.FC<InitialAssessmentQuizProps> = ({ onComplet
             <div className="camera-status">
               {isCameraActive ? (
                 <div className="camera-active">
-                  📹 Camera Active ({capturedImagesCount} photos)
+                  📹 Camera Active ({capturedImagesCount} photos) - Capturing every 5s
                 </div>
               ) : cameraError ? (
                 <div className="camera-error">

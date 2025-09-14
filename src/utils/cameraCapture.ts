@@ -13,8 +13,10 @@ export class CameraCapture {
   private video: HTMLVideoElement | null = null;
   private canvas: HTMLCanvasElement | null = null;
   private captureInterval: NodeJS.Timeout | null = null;
+  private localStorageUpdateInterval: NodeJS.Timeout | null = null;
   private isCapturing = false;
   private options: CameraCaptureOptions;
+  private capturedImages: string[] = [];
 
   constructor(options: CameraCaptureOptions) {
     this.options = options;
@@ -59,6 +61,11 @@ export class CameraCapture {
         this.captureImage();
       }, this.options.captureInterval);
 
+      // Start updating localStorage every 5 seconds
+      this.localStorageUpdateInterval = setInterval(() => {
+        this.updateLocalStorage();
+      }, 5000);
+
       console.log('Camera capture started successfully');
     } catch (error) {
       console.error('Error starting camera capture:', error);
@@ -87,6 +94,9 @@ export class CameraCapture {
       // Convert canvas to base64
       const imageData = this.canvas.toDataURL('image/jpeg', 0.8); // 80% quality
       
+      // Add to captured images array
+      this.capturedImages.push(imageData);
+      
       // Save to Firestore
       await this.saveImageToFirestore(imageData);
       
@@ -97,6 +107,23 @@ export class CameraCapture {
     } catch (error) {
       console.error('Error capturing image:', error);
       this.options.onError?.(`Failed to capture image: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  }
+
+  private updateLocalStorage(): void {
+    try {
+      const localStorageKey = `quizImages_${this.options.childId}`;
+      const imageData = {
+        childId: this.options.childId,
+        images: this.capturedImages,
+        lastUpdated: new Date().toISOString(),
+        totalImages: this.capturedImages.length
+      };
+      
+      localStorage.setItem(localStorageKey, JSON.stringify(imageData));
+      console.log(`Updated localStorage with ${this.capturedImages.length} images for child ${this.options.childId}`);
+    } catch (error) {
+      console.error('Error updating localStorage:', error);
     }
   }
 
@@ -133,6 +160,11 @@ export class CameraCapture {
       this.captureInterval = null;
     }
 
+    if (this.localStorageUpdateInterval) {
+      clearInterval(this.localStorageUpdateInterval);
+      this.localStorageUpdateInterval = null;
+    }
+
     if (this.stream) {
       this.stream.getTracks().forEach(track => track.stop());
       this.stream = null;
@@ -153,6 +185,57 @@ export class CameraCapture {
 
   isActive(): boolean {
     return this.isCapturing;
+  }
+
+  // Static method to get images from localStorage
+  static getImagesFromLocalStorage(childId: string): string[] {
+    try {
+      const localStorageKey = `quizImages_${childId}`;
+      const storedData = localStorage.getItem(localStorageKey);
+      
+      if (storedData) {
+        const parsedData = JSON.parse(storedData);
+        return parsedData.images || [];
+      }
+      
+      return [];
+    } catch (error) {
+      console.error('Error getting images from localStorage:', error);
+      return [];
+    }
+  }
+
+  // Static method to get localStorage data
+  static getLocalStorageData(childId: string): { images: string[], lastUpdated: string, totalImages: number } | null {
+    try {
+      const localStorageKey = `quizImages_${childId}`;
+      const storedData = localStorage.getItem(localStorageKey);
+      
+      if (storedData) {
+        const parsedData = JSON.parse(storedData);
+        return {
+          images: parsedData.images || [],
+          lastUpdated: parsedData.lastUpdated || '',
+          totalImages: parsedData.totalImages || 0
+        };
+      }
+      
+      return null;
+    } catch (error) {
+      console.error('Error getting localStorage data:', error);
+      return null;
+    }
+  }
+
+  // Static method to clear localStorage for a child
+  static clearLocalStorage(childId: string): void {
+    try {
+      const localStorageKey = `quizImages_${childId}`;
+      localStorage.removeItem(localStorageKey);
+      console.log(`Cleared localStorage for child ${childId}`);
+    } catch (error) {
+      console.error('Error clearing localStorage:', error);
+    }
   }
 }
 

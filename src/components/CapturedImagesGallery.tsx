@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { collection, query, where, orderBy, getDocs } from 'firebase/firestore';
 import { db } from '../config/firebaseConfig';
+import { CameraCapture } from '../utils/cameraCapture';
 import './CapturedImagesGallery.css';
 
 interface CapturedImage {
@@ -41,6 +42,29 @@ const CapturedImagesGallery: React.FC<CapturedImagesGalleryProps> = ({ isOpen, o
     
     try {
       console.log('Fetching images for child ID:', childId);
+      
+      // First, try to get images from localStorage
+      const localStorageData = CameraCapture.getLocalStorageData(childId);
+      console.log('localStorage data:', localStorageData);
+      
+      if (localStorageData && localStorageData.images.length > 0) {
+        console.log(`Found ${localStorageData.images.length} images in localStorage`);
+        
+        // Convert localStorage images to CapturedImage format
+        const localStorageImages: CapturedImage[] = localStorageData.images.map((imageData, index) => ({
+          id: `local_${index}`,
+          childId: childId,
+          imageData: imageData,
+          timestamp: new Date(localStorageData.lastUpdated),
+          capturedAt: localStorageData.lastUpdated,
+          quizType: 'initial_assessment'
+        }));
+        
+        setImages(localStorageImages);
+        console.log('Using images from localStorage');
+        setLoading(false);
+        return;
+      }
       
       const imagesRef = collection(db, 'quizImages');
       
@@ -163,9 +187,14 @@ const CapturedImagesGallery: React.FC<CapturedImagesGalleryProps> = ({ isOpen, o
       <div className="images-gallery-modal">
         <div className="images-gallery-header">
           <h2>📸 My Quiz Photos 📸</h2>
-          <button className="close-btn" onClick={onClose}>
-            ✕
-          </button>
+          <div className="header-actions">
+            <button className="refresh-btn" onClick={fetchCapturedImages} title="Refresh images">
+              🔄
+            </button>
+            <button className="close-btn" onClick={onClose}>
+              ✕
+            </button>
+          </div>
         </div>
         
         <div className="images-gallery-content">
@@ -226,6 +255,11 @@ const CapturedImagesGallery: React.FC<CapturedImagesGalleryProps> = ({ isOpen, o
         
         <div className="images-gallery-footer">
           <p>📸 {images.length} photos captured during your quiz</p>
+          {images.length > 0 && images[0].id.startsWith('local_') && (
+            <p style={{ fontSize: '12px', color: '#7f8c8d', margin: '5px 0 0 0' }}>
+              💾 Images loaded from local storage
+            </p>
+          )}
         </div>
       </div>
 
