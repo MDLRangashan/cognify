@@ -8,6 +8,7 @@ import LeveledMathQuiz from '../../components/LeveledMathQuiz';
 import LearningLibrary from '../../components/LearningLibrary';
 import MiniGames from '../../components/MiniGames';
 import LanguageSelector from '../../components/LanguageSelector';
+import CapturedImagesGallery from '../../components/CapturedImagesGallery';
 import { QuizPerformance } from '../../utils/performanceCategorizer';
 import { QuizLevel, updateLevelProgress, getTotalPoints, getCompletedLevels, getLevelsForCategory, PerformanceCategory, updateLevelWithAdminQuiz } from '../../utils/performanceBasedLevels';
 import { fetchQuizByLevel, fetchAllQuizzesByLevel, AdminQuiz } from '../../utils/quizFetcher';
@@ -48,6 +49,7 @@ const ChildrenDashboard: React.FC = () => {
   const [hasCompletedAssessment, setHasCompletedAssessment] = useState(false);
   const [showLearningLibrary, setShowLearningLibrary] = useState(false);
   const [showMiniGames, setShowMiniGames] = useState(false);
+  const [showImageGallery, setShowImageGallery] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -512,7 +514,7 @@ const ChildrenDashboard: React.FC = () => {
           </div>
         </header>
         <main className="children-main">
-          <InitialAssessmentQuiz onComplete={handleAssessmentComplete} />
+          <InitialAssessmentQuiz onComplete={handleAssessmentComplete} childId={childData?.id} />
         </main>
       </div>
     );
@@ -800,7 +802,38 @@ const ChildrenDashboard: React.FC = () => {
             </div>
           </div>
         </div>
+
+        {/* Show View Photos button only after assessment completion */}
+        {hasCompletedAssessment && (
+          <div className="children-photos-section">
+            <div className="children-photos-card">
+              <h4>📸 {t('quiz.myQuizPhotos')} 📸</h4>
+              <p>View photos captured during your assessment! 📷✨</p>
+              <button 
+                className="children-action-btn photos-btn" 
+                onClick={() => setShowImageGallery(true)}
+              >
+                📸 {t('quiz.viewMyPhotos')}! 📸
+              </button>
+            </div>
+          </div>
+        )}
       </main>
+
+      {/* Image Gallery Modal */}
+      <CapturedImagesGallery
+        isOpen={showImageGallery}
+        onClose={() => setShowImageGallery(false)}
+        childId={childData?.id || ''}
+      />
+      
+      {/* Debug info - remove in production */}
+      {process.env.NODE_ENV === 'development' && (
+        <div style={{ position: 'fixed', bottom: '10px', right: '10px', background: 'rgba(0,0,0,0.8)', color: 'white', padding: '10px', borderRadius: '5px', fontSize: '12px', zIndex: 9999 }}>
+          <div>Child ID: {childData?.id || 'No ID'}</div>
+          <div>Assessment Completed: {hasCompletedAssessment ? 'Yes' : 'No'}</div>
+        </div>
+      )}
     </div>
   );
 };

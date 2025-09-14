@@ -4,6 +4,8 @@ import PerformanceModal from './PerformanceModal';
 import { categorizePerformance, QuizPerformance } from '../utils/performanceCategorizer';
 import { getPerformanceCategory, PerformanceCategory } from '../utils/performanceBasedLevels';
 import { fetchInitialAssessmentQuiz, AdminQuiz } from '../utils/quizFetcher';
+import { CameraCapture, checkCameraAvailability } from '../utils/cameraCapture';
+import CameraPermissionDialog from './CameraPermissionDialog';
 
 interface Question {
   id: number;
@@ -17,9 +19,10 @@ interface Question {
 
 interface InitialAssessmentQuizProps {
   onComplete: (performance: QuizPerformance, category: PerformanceCategory) => void;
+  childId?: string;
 }
 
-const InitialAssessmentQuiz: React.FC<InitialAssessmentQuizProps> = ({ onComplete }) => {
+const InitialAssessmentQuiz: React.FC<InitialAssessmentQuizProps> = ({ onComplete, childId }) => {
   const [questions, setQuestions] = useState<Question[]>([]);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
@@ -44,6 +47,82 @@ const InitialAssessmentQuiz: React.FC<InitialAssessmentQuizProps> = ({ onComplet
   const [startTime, setStartTime] = useState<number>(Date.now());
   const [adminQuiz, setAdminQuiz] = useState<AdminQuiz | null>(null);
   const hasSubmittedRef = useRef<boolean>(false);
+  
+  // Camera capture state
+  const [cameraCapture, setCameraCapture] = useState<CameraCapture | null>(null);
+  const [cameraError, setCameraError] = useState<string | null>(null);
+  const [isCameraActive, setIsCameraActive] = useState(false);
+  const [capturedImagesCount, setCapturedImagesCount] = useState(0);
+  const [showPermissionDialog, setShowPermissionDialog] = useState(false);
+  const [cameraPermissionGranted, setCameraPermissionGranted] = useState(false);
+
+  // Initialize camera capture
+  const initializeCameraCapture = async () => {
+    if (!childId) {
+      console.warn('No child ID provided, skipping camera capture');
+      return;
+    }
+
+    // Show permission dialog first
+    setShowPermissionDialog(true);
+  };
+
+  // Handle camera permission response
+  const handleCameraPermission = async (granted: boolean) => {
+    setShowPermissionDialog(false);
+    setCameraPermissionGranted(granted);
+
+    if (!granted) {
+      setCameraError('Camera access denied - continuing without camera monitoring');
+      return;
+    }
+
+    try {
+      // Check if camera is available
+      const isCameraAvailable = await checkCameraAvailability();
+      if (!isCameraAvailable) {
+        setCameraError('Camera not available on this device');
+        return;
+      }
+
+      // Create camera capture instance
+      const camera = new CameraCapture({
+        childId: childId!,
+        captureInterval: 10000, // 10 seconds
+        onError: (error) => {
+          console.error('Camera capture error:', error);
+          setCameraError(error);
+        },
+        onCapture: (imageData) => {
+          console.log('Image captured successfully, base64 length:', imageData.length);
+          setCapturedImagesCount(prev => {
+            const newCount = prev + 1;
+            console.log(`Total images captured so far: ${newCount}`);
+            return newCount;
+          });
+        }
+      });
+
+      setCameraCapture(camera);
+      await camera.startCapture();
+      setIsCameraActive(true);
+      setCameraError(null);
+      console.log('Camera capture initialized successfully');
+    } catch (error) {
+      console.error('Failed to initialize camera capture:', error);
+      setCameraError(`Failed to start camera: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  };
+
+  // Cleanup camera capture
+  const cleanupCameraCapture = () => {
+    if (cameraCapture) {
+      cameraCapture.stopCapture();
+      setCameraCapture(null);
+      setIsCameraActive(false);
+      console.log('Camera capture cleaned up');
+    }
+  };
 
   // Generate initial assessment questions (mix of all difficulty levels)
   const generateAssessmentQuestions = (): Question[] => {
@@ -187,15 +266,28 @@ const InitialAssessmentQuiz: React.FC<InitialAssessmentQuizProps> = ({ onComplet
           setQuestions(generateAssessmentQuestions());
         }
         setStartTime(Date.now());
+        
+        // Initialize camera capture after quiz is loaded
+        await initializeCameraCapture();
       } catch (error) {
         console.error('Error loading initial assessment quiz:', error);
         // Fallback to auto-generated questions
         setQuestions(generateAssessmentQuestions());
         setStartTime(Date.now());
+        
+        // Still try to initialize camera even with fallback questions
+        await initializeCameraCapture();
       }
     };
     
     loadQuiz();
+  }, []);
+
+  // Cleanup camera capture on component unmount
+  useEffect(() => {
+    return () => {
+      cleanupCameraCapture();
+    };
   }, []);
 
   useEffect(() => {
@@ -350,6 +442,9 @@ const InitialAssessmentQuiz: React.FC<InitialAssessmentQuizProps> = ({ onComplet
     
     setQuizCompleted(true);
 
+    // Stop camera capture when quiz finishes
+    cleanupCameraCapture();
+
     // Immediately submit so data is persisted even if the modal isn't interacted with
     if (!hasSubmittedRef.current && category) {
       hasSubmittedRef.current = true;
@@ -414,6 +509,25 @@ const InitialAssessmentQuiz: React.FC<InitialAssessmentQuizProps> = ({ onComplet
           </div>
           <div className="quiz-info">
             <div className="timer">⏰ {formatTime(timeLeft)}</div>
+            <div className="camera-status">
+              {isCameraActive ? (
+                <div className="camera-active">
+                  📹 Camera Active ({capturedImagesCount} photos)
+                </div>
+              ) : cameraError ? (
+                <div className="camera-error">
+                  📹 {cameraError}
+                </div>
+              ) : showPermissionDialog ? (
+                <div className="camera-inactive">
+                  📹 Requesting Camera Permission...
+                </div>
+              ) : (
+                <div className="camera-inactive">
+                  📹 Camera Starting...
+                </div>
+              )}
+            </div>
             <div className="progress">
               <div className="progress-bar">
                 <div 
@@ -482,6 +596,12 @@ const InitialAssessmentQuiz: React.FC<InitialAssessmentQuizProps> = ({ onComplet
           }}
         />
       )}
+
+      <CameraPermissionDialog
+        isOpen={showPermissionDialog}
+        onAllow={() => handleCameraPermission(true)}
+        onDeny={() => handleCameraPermission(false)}
+      />
     </>
   );
 };
