@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useLanguage } from '../contexts/LanguageContext';
 import { collection, query, where, getDocs } from 'firebase/firestore';
 import { db } from '../config/firebaseConfig';
@@ -99,6 +99,11 @@ const ChildrenLogin: React.FC = () => {
 
         <div className="login-footer">
           <p>Need help? Contact your teacher or parent.</p>
+          <div className="navigation-links">
+            <Link to="/login" className="back-to-main-login">
+              {t('common.backToMainLogin')}
+            </Link>
+          </div>
         </div>
       </div>
     </div>

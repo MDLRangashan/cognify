@@ -585,14 +585,54 @@ const ChildrenDashboard: React.FC = () => {
       </div>
 
       <header className="children-header">
+        <div className="floating-emojis">
+          <span className="floating-emoji emoji-1">🎈</span>
+          <span className="floating-emoji emoji-2">⭐</span>
+          <span className="floating-emoji emoji-3">🎨</span>
+          <span className="floating-emoji emoji-4">🎪</span>
+          <span className="floating-emoji emoji-5">🌈</span>
+          <span className="floating-emoji emoji-6">🎭</span>
+          <span className="floating-emoji emoji-7">🎯</span>
+          <span className="floating-emoji emoji-8">🎲</span>
+        </div>
+        
         <div className="children-header-content">
-          <h1>🌟 {t('quiz.mySuperCoolInfo')}! 🌟</h1>
+          <div className="header-left">
+            <div className="magical-logo">
+              <div className="logo-sparkle sparkle-1">✨</div>
+              <div className="logo-sparkle sparkle-2">✨</div>
+              <div className="logo-sparkle sparkle-3">✨</div>
+              <h1 className="magical-title">
+                <span className="title-word word-1">🌟</span>
+                <span className="title-word word-2">{t('quiz.mySuperCoolInfo')}</span>
+                <span className="title-word word-3">🌟</span>
+              </h1>
+            </div>
+          </div>
+          
           <div className="children-user-info">
+            <div className="welcome-bubble">
+              <span className="bouncing-text">
+                {t('common.welcome')}, {childData.firstName}! 
+                <span className="celebration-emoji">🎉</span>
+              </span>
+            </div>
             <LanguageSelector />
-            <span className="children-welcome">{t('common.welcome')}, {childData.firstName}! 🎉</span>
             <button onClick={handleLogout} className="children-logout-btn">
+              <span className="btn-emoji">🚪</span>
               {t('common.logout')}
             </button>
+          </div>
+        </div>
+        
+        <div className="header-decoration">
+          <div className="rainbow-line"></div>
+          <div className="bouncing-dots">
+            <span className="dot dot-1"></span>
+            <span className="dot dot-2"></span>
+            <span className="dot dot-3"></span>
+            <span className="dot dot-4"></span>
+            <span className="dot dot-5"></span>
           </div>
         </div>
       </header>

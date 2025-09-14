@@ -16,6 +16,7 @@ import {
 } from 'recharts';
 import { collection, query, where, getDocs, orderBy } from 'firebase/firestore';
 import { db } from '../config/firebaseConfig';
+import { useLanguage } from '../contexts/LanguageContext';
 import './ParentAnalytics.css';
 
 interface Child {
@@ -31,16 +32,17 @@ interface Child {
 
 interface QuizResult {
   id: string;
-  studentId: string;
-  studentName: string;
-  quizType: string;
-  level: string;
+  childId: string;
+  childName: string;
+  category: string;
+  levelName: string;
   score: number;
   totalQuestions: number;
   accuracy: number;
-  timeSpent: number;
-  timestamp: any;
-  performanceLevel: string;
+  timeTaken: number;
+  completedAt: Date;
+  levelId?: number;
+  levelDifficulty?: string;
   detailedAnswers?: any[];
 }
 
@@ -49,6 +51,7 @@ interface ParentAnalyticsProps {
 }
 
 const ParentAnalytics: React.FC<ParentAnalyticsProps> = ({ children }) => {
+  const { t } = useLanguage();
   const [quizResults, setQuizResults] = useState<QuizResult[]>([]);
   const [loading, setLoading] = useState(true);
   const [timeRange, setTimeRange] = useState<'week' | 'month' | 'all'>('month');
@@ -57,16 +60,32 @@ const ParentAnalytics: React.FC<ParentAnalyticsProps> = ({ children }) => {
   // Fetch quiz results for children
   useEffect(() => {
     const fetchQuizResults = async () => {
+      console.log('=== PARENT ANALYTICS DEBUG ===');
+      console.log('Children data received:', children);
+      console.log('Children count:', children?.length);
+      
       if (!children || children.length === 0) {
+        console.log('No children data, setting loading to false');
         setLoading(false);
         return;
       }
 
       try {
         const childIds = children.map(child => child.id);
-        const quizResultsRef = collection(db, 'quizResults');
+        console.log('Child IDs for query:', childIds);
+        console.log('Children data structure:', children);
         
-        let dateFilter;
+        // If no child IDs, return early
+        if (childIds.length === 0) {
+          console.log('No child IDs found, returning empty results');
+          setQuizResults([]);
+          setLoading(false);
+          return;
+        }
+        
+        const performanceRef = collection(db, 'childrenPerformance');
+        
+        let dateFilter: Date | undefined;
         const now = new Date();
         if (timeRange === 'week') {
           dateFilter = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
@@ -74,42 +93,69 @@ const ParentAnalytics: React.FC<ParentAnalyticsProps> = ({ children }) => {
           dateFilter = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
         }
 
-        let q = query(
-          quizResultsRef,
-          where('studentId', 'in', childIds),
-          orderBy('timestamp', 'desc')
-        );
-
+        // Use a simpler approach to avoid Firebase index requirements
+        // Get all performance data and filter in memory
+        let q = query(performanceRef);
+        
+        // If we have a date filter, we can still use it
         if (dateFilter) {
           q = query(
-            quizResultsRef,
-            where('studentId', 'in', childIds),
-            where('timestamp', '>=', dateFilter),
-            orderBy('timestamp', 'desc')
+            performanceRef,
+            where('completedAt', '>=', dateFilter)
           );
         }
 
         const snapshot = await getDocs(q);
+        console.log('Firebase query snapshot size:', snapshot.size);
         const results: QuizResult[] = [];
         
         snapshot.forEach((doc) => {
           const data = doc.data();
-          results.push({
-            id: doc.id,
-            studentId: data.studentId,
-            studentName: data.studentName,
-            quizType: data.quizType || 'Unknown',
-            level: data.level || 'Unknown',
-            score: data.score || 0,
-            totalQuestions: data.totalQuestions || 0,
-            accuracy: data.accuracy || 0,
-            timeSpent: data.timeSpent || 0,
-            timestamp: data.timestamp,
-            performanceLevel: data.performanceLevel || 'Unknown',
-            detailedAnswers: data.detailedAnswers || []
-          });
+          console.log('Document data:', doc.id, data);
+          
+          // Check if this document belongs to one of our children
+          if (!childIds.includes(data.childId)) {
+            console.log('Skipping document for different child:', data.childId);
+            return;
+          }
+          
+          // Apply date filter if needed (in case we couldn't use it in the query)
+          if (dateFilter && data.completedAt) {
+            const completedDate = data.completedAt.toDate ? data.completedAt.toDate() : new Date(data.completedAt);
+            if (completedDate < dateFilter) {
+              console.log('Skipping document due to date filter:', completedDate);
+              return;
+            }
+          }
+          
+          // Only include quizzes that have detailed answers (completed quizzes)
+          if (data.detailedAnswers && data.detailedAnswers.length > 0) {
+            console.log('Adding quiz result:', data.childName, data.category);
+            results.push({
+              id: doc.id,
+              childId: data.childId,
+              childName: data.childName,
+              category: data.category || 'Unknown',
+              levelName: data.levelName || 'Unknown',
+              score: data.score || 0,
+              totalQuestions: data.totalQuestions || 0,
+              accuracy: data.accuracy || 0,
+              timeTaken: data.timeTaken || 0,
+              completedAt: data.completedAt?.toDate() || new Date(),
+              levelId: data.levelId,
+              levelDifficulty: data.levelDifficulty,
+              detailedAnswers: data.detailedAnswers || []
+            });
+          } else {
+            console.log('Skipping quiz without detailed answers:', doc.id);
+          }
         });
+        
+        // Sort results by completedAt date (most recent first)
+        results.sort((a, b) => b.completedAt.getTime() - a.completedAt.getTime());
 
+        console.log('Fetched quiz results:', results.length, 'quizzes');
+        console.log('Quiz results data:', results);
         setQuizResults(results);
       } catch (error) {
         console.error('Error fetching quiz results:', error);
@@ -123,7 +169,12 @@ const ParentAnalytics: React.FC<ParentAnalyticsProps> = ({ children }) => {
 
   // Calculate analytics data
   const getAnalyticsData = () => {
+    console.log('=== ANALYTICS DATA CALCULATION ===');
+    console.log('Children in calculation:', children);
+    console.log('Quiz results in calculation:', quizResults);
+    
     if (!children || children.length === 0) {
+      console.log('No children data, returning empty analytics');
       return {
         totalChildren: 0,
         totalQuizzes: 0,
@@ -139,7 +190,7 @@ const ParentAnalytics: React.FC<ParentAnalyticsProps> = ({ children }) => {
     // Filter results by selected child
     const filteredResults = selectedChild === 'all' 
       ? quizResults 
-      : quizResults.filter(result => result.studentId === selectedChild);
+      : quizResults.filter(result => result.childId === selectedChild);
 
     const selectedChildData = selectedChild === 'all' ? children : children.filter(c => c.id === selectedChild);
 
@@ -152,7 +203,7 @@ const ParentAnalytics: React.FC<ParentAnalyticsProps> = ({ children }) => {
 
     // Child progress data
     const childProgress = selectedChildData.map(child => {
-      const childQuizzes = filteredResults.filter(result => result.studentId === child.id);
+      const childQuizzes = filteredResults.filter(result => result.childId === child.id);
       const recentQuizzes = childQuizzes.slice(0, 10); // Last 10 quizzes
       const averageAccuracy = recentQuizzes.length > 0
         ? recentQuizzes.reduce((sum, q) => sum + q.accuracy, 0) / recentQuizzes.length
@@ -179,17 +230,17 @@ const ParentAnalytics: React.FC<ParentAnalyticsProps> = ({ children }) => {
         averageScore: Math.round(averageAccuracy),
         improvement: Math.round(improvement),
         lastQuiz: childQuizzes.length > 0 
-          ? childQuizzes[0].timestamp?.toDate?.()?.toLocaleDateString() || 'Never'
-          : 'Never',
+          ? childQuizzes[0].completedAt?.toLocaleDateString() || t('analytics.never')
+          : t('analytics.never'),
         performanceLevel: child.performanceLevel || 'Unknown'
       };
     });
 
     // Performance distribution
     const performanceDistribution = [
-      { name: 'High Performers', value: selectedChildData.filter(c => c.performanceLevel === 'High').length, color: '#10B981' },
-      { name: 'Middle Performers', value: selectedChildData.filter(c => c.performanceLevel === 'Middle').length, color: '#F59E0B' },
-      { name: 'Low Performers', value: selectedChildData.filter(c => c.performanceLevel === 'Low').length, color: '#EF4444' }
+      { name: t('analytics.highPerformers'), value: selectedChildData.filter(c => c.performanceLevel === 'High').length, color: '#10B981' },
+      { name: t('analytics.middlePerformers'), value: selectedChildData.filter(c => c.performanceLevel === 'Middle').length, color: '#F59E0B' },
+      { name: t('analytics.lowPerformers'), value: selectedChildData.filter(c => c.performanceLevel === 'Low').length, color: '#EF4444' }
     ];
 
     // Quiz activity over time (last 7 days)
@@ -200,7 +251,7 @@ const ParentAnalytics: React.FC<ParentAnalyticsProps> = ({ children }) => {
       const dateStr = date.toISOString().split('T')[0];
       
       const dayQuizzes = filteredResults.filter(result => {
-        const resultDate = result.timestamp?.toDate?.() || new Date(result.timestamp);
+        const resultDate = result.completedAt;
         return resultDate.toISOString().split('T')[0] === dateStr;
       });
 
@@ -219,8 +270,8 @@ const ParentAnalytics: React.FC<ParentAnalyticsProps> = ({ children }) => {
     
     subjects.forEach(subject => {
       const subjectQuizzes = filteredResults.filter(result => 
-        result.quizType?.toLowerCase().includes(subject.toLowerCase()) ||
-        result.level?.toLowerCase().includes(subject.toLowerCase())
+        result.category?.toLowerCase().includes(subject.toLowerCase()) ||
+        result.levelName?.toLowerCase().includes(subject.toLowerCase())
       );
       
       if (subjectQuizzes.length > 0) {
@@ -238,13 +289,13 @@ const ParentAnalytics: React.FC<ParentAnalyticsProps> = ({ children }) => {
       .filter(result => result.accuracy >= 80)
       .slice(0, 5)
       .map(result => ({
-        childName: result.studentName,
-        quizType: result.quizType,
+        childName: result.childName,
+        quizType: result.category,
         score: result.accuracy,
-        date: result.timestamp?.toDate?.()?.toLocaleDateString() || 'Unknown'
+        date: result.completedAt?.toLocaleDateString() || 'Unknown'
       }));
 
-    return {
+    const finalData = {
       totalChildren,
       totalQuizzes,
       averageScore: Math.round(averageScore),
@@ -254,34 +305,36 @@ const ParentAnalytics: React.FC<ParentAnalyticsProps> = ({ children }) => {
       subjectPerformance,
       recentAchievements
     };
+    
+    console.log('Final analytics data:', finalData);
+    return finalData;
   };
 
   const analyticsData = getAnalyticsData();
 
   if (loading) {
-    return (
-      <div className="parent-analytics">
-        <div className="analytics-loading">
-          <div className="loading-spinner"></div>
-          <p>Loading your children's progress...</p>
+      return (
+        <div className="parent-analytics">
+          <div className="analytics-loading-simple">
+            <p>{t('analytics.loadingMessage')}</p>
+          </div>
         </div>
-      </div>
-    );
+      );
   }
 
   return (
     <div className="parent-analytics">
       <div className="analytics-header">
-        <h2>Children's Progress Analytics</h2>
+        <h2>{t('analytics.title')}</h2>
         <div className="header-controls">
           <div className="child-selector">
-            <label>View:</label>
+            <label>{t('analytics.view')}</label>
             <select 
               value={selectedChild} 
               onChange={(e) => setSelectedChild(e.target.value)}
               className="child-select"
             >
-              <option value="all">All Children</option>
+              <option value="all">{t('analytics.allChildren')}</option>
               {children.map(child => (
                 <option key={child.id} value={child.id}>
                   {child.firstName} {child.lastName}
@@ -294,19 +347,19 @@ const ParentAnalytics: React.FC<ParentAnalyticsProps> = ({ children }) => {
               className={timeRange === 'week' ? 'active' : ''} 
               onClick={() => setTimeRange('week')}
             >
-              Last Week
+              {t('analytics.lastWeek')}
             </button>
             <button 
               className={timeRange === 'month' ? 'active' : ''} 
               onClick={() => setTimeRange('month')}
             >
-              Last Month
+              {t('analytics.lastMonth')}
             </button>
             <button 
               className={timeRange === 'all' ? 'active' : ''} 
               onClick={() => setTimeRange('all')}
             >
-              All Time
+              {t('analytics.allTime')}
             </button>
           </div>
         </div>
@@ -318,28 +371,28 @@ const ParentAnalytics: React.FC<ParentAnalyticsProps> = ({ children }) => {
           <div className="card-icon">👶</div>
           <div className="card-content">
             <h3>{analyticsData.totalChildren}</h3>
-            <p>{analyticsData.totalChildren === 1 ? 'Child' : 'Children'}</p>
+            <p>{analyticsData.totalChildren === 1 ? t('analytics.child') : t('analytics.children')}</p>
           </div>
         </div>
         <div className="overview-card">
           <div className="card-icon">📚</div>
           <div className="card-content">
             <h3>{analyticsData.totalQuizzes}</h3>
-            <p>Total Quizzes</p>
+            <p>{t('analytics.totalQuizzes')}</p>
           </div>
         </div>
         <div className="overview-card">
           <div className="card-icon">🎯</div>
           <div className="card-content">
             <h3>{analyticsData.averageScore}%</h3>
-            <p>Average Score</p>
+            <p>{t('analytics.averageScore')}</p>
           </div>
         </div>
         <div className="overview-card">
           <div className="card-icon">📈</div>
           <div className="card-content">
             <h3>{analyticsData.quizActivity[analyticsData.quizActivity.length - 1]?.quizzes || 0}</h3>
-            <p>Today's Activity</p>
+            <p>{t('analytics.todaysActivity')}</p>
           </div>
         </div>
       </div>
@@ -348,7 +401,7 @@ const ParentAnalytics: React.FC<ParentAnalyticsProps> = ({ children }) => {
       <div className="analytics-charts">
         {/* Child Progress Overview */}
         <div className="chart-container full-width">
-          <h3>📊 {selectedChild === 'all' ? 'All Children' : 'Child'} Progress Overview</h3>
+          <h3>📊 {selectedChild === 'all' ? t('analytics.allChildren') : t('analytics.child')} {t('analytics.progressOverview')}</h3>
           <ResponsiveContainer width="100%" height={300}>
             <BarChart data={analyticsData.childProgress}>
               <CartesianGrid strokeDasharray="3 3" />
@@ -356,15 +409,15 @@ const ParentAnalytics: React.FC<ParentAnalyticsProps> = ({ children }) => {
               <YAxis />
               <Tooltip />
               <Legend />
-              <Bar dataKey="quizzes" fill="#3B82F6" name="Total Quizzes" />
-              <Bar dataKey="averageScore" fill="#10B981" name="Average Score %" />
+              <Bar dataKey="quizzes" fill="#3B82F6" name={t('analytics.totalQuizzes')} />
+              <Bar dataKey="averageScore" fill="#10B981" name={t('analytics.averageScorePercent')} />
             </BarChart>
           </ResponsiveContainer>
         </div>
 
         {/* Performance Distribution */}
         <div className="chart-container">
-          <h3>🎯 Performance Level</h3>
+          <h3>🎯 {t('analytics.performanceLevel')}</h3>
           <ResponsiveContainer width="100%" height={300}>
             <PieChart>
               <Pie
@@ -389,7 +442,7 @@ const ParentAnalytics: React.FC<ParentAnalyticsProps> = ({ children }) => {
 
         {/* Quiz Activity Over Time */}
         <div className="chart-container">
-          <h3>📅 Activity Trend (Last 7 Days)</h3>
+          <h3>📅 {t('analytics.activityTrend')}</h3>
           <ResponsiveContainer width="100%" height={300}>
             <AreaChart data={analyticsData.quizActivity}>
               <CartesianGrid strokeDasharray="3 3" />
@@ -403,7 +456,7 @@ const ParentAnalytics: React.FC<ParentAnalyticsProps> = ({ children }) => {
                 stackId="1" 
                 stroke="#3B82F6" 
                 fill="#3B82F6" 
-                name="Quizzes"
+                name={t('analytics.quizzes')}
               />
               <Area 
                 type="monotone" 
@@ -411,7 +464,7 @@ const ParentAnalytics: React.FC<ParentAnalyticsProps> = ({ children }) => {
                 stackId="2" 
                 stroke="#10B981" 
                 fill="#10B981" 
-                name="Avg Score %"
+                name={t('analytics.averageScorePercent')}
               />
             </AreaChart>
           </ResponsiveContainer>
@@ -420,7 +473,7 @@ const ParentAnalytics: React.FC<ParentAnalyticsProps> = ({ children }) => {
         {/* Subject Performance */}
         {analyticsData.subjectPerformance.length > 0 && (
           <div className="chart-container full-width">
-            <h3>📖 Subject Performance</h3>
+            <h3>📖 {t('analytics.subjectPerformance')}</h3>
             <ResponsiveContainer width="100%" height={300}>
               <BarChart data={analyticsData.subjectPerformance}>
                 <CartesianGrid strokeDasharray="3 3" />
@@ -428,8 +481,8 @@ const ParentAnalytics: React.FC<ParentAnalyticsProps> = ({ children }) => {
                 <YAxis />
                 <Tooltip />
                 <Legend />
-                <Bar dataKey="averageScore" fill="#8B5CF6" name="Average Score %" />
-                <Bar dataKey="quizCount" fill="#F59E0B" name="Quiz Count" />
+                <Bar dataKey="averageScore" fill="#8B5CF6" name={t('analytics.averageScorePercent')} />
+                <Bar dataKey="quizCount" fill="#F59E0B" name={t('analytics.quizzes')} />
               </BarChart>
             </ResponsiveContainer>
           </div>
@@ -439,41 +492,41 @@ const ParentAnalytics: React.FC<ParentAnalyticsProps> = ({ children }) => {
       {/* Child Details and Achievements */}
       <div className="analytics-details">
         <div className="child-details">
-          <h3>👶 Child Details</h3>
+          <h3>👶 {t('analytics.childDetails')}</h3>
           <div className="child-cards">
             {analyticsData.childProgress.map((child, index) => (
               <div key={index} className="child-card">
                 <div className="child-header">
                   <h4>{child.name}</h4>
                   <span className={`performance-badge ${child.performanceLevel?.toLowerCase()}`}>
-                    {child.performanceLevel} Performer
+                    {child.performanceLevel} {t('analytics.performer')}
                   </span>
                 </div>
                 <div className="child-stats">
                   <div className="stat">
-                    <span className="stat-label">Age:</span>
-                    <span className="stat-value">{child.age} years</span>
+                    <span className="stat-label">{t('common.age')}:</span>
+                    <span className="stat-value">{child.age} {t('common.years')}</span>
                   </div>
                   <div className="stat">
-                    <span className="stat-label">Teacher:</span>
+                    <span className="stat-label">{t('analytics.teacher')}:</span>
                     <span className="stat-value">{child.teacher}</span>
                   </div>
                   <div className="stat">
-                    <span className="stat-label">Quizzes:</span>
+                    <span className="stat-label">{t('analytics.quizzes')}:</span>
                     <span className="stat-value">{child.quizzes}</span>
                   </div>
                   <div className="stat">
-                    <span className="stat-label">Average Score:</span>
+                    <span className="stat-label">{t('analytics.averageScore')}:</span>
                     <span className="stat-value">{child.averageScore}%</span>
                   </div>
                   <div className="stat">
-                    <span className="stat-label">Improvement:</span>
+                    <span className="stat-label">{t('analytics.improvement')}:</span>
                     <span className={`stat-value ${child.improvement >= 0 ? 'positive' : 'negative'}`}>
                       {child.improvement >= 0 ? '+' : ''}{child.improvement}%
                     </span>
                   </div>
                   <div className="stat">
-                    <span className="stat-label">Last Quiz:</span>
+                    <span className="stat-label">{t('analytics.lastQuiz')}:</span>
                     <span className="stat-value">{child.lastQuiz}</span>
                   </div>
                 </div>
@@ -483,7 +536,7 @@ const ParentAnalytics: React.FC<ParentAnalyticsProps> = ({ children }) => {
         </div>
 
         <div className="recent-achievements">
-          <h3>🏆 Recent Achievements</h3>
+          <h3>🏆 {t('analytics.recentAchievements')}</h3>
           <div className="achievements-list">
             {analyticsData.recentAchievements.length > 0 ? (
               analyticsData.recentAchievements.map((achievement, index) => (
@@ -491,14 +544,14 @@ const ParentAnalytics: React.FC<ParentAnalyticsProps> = ({ children }) => {
                   <div className="achievement-icon">🎉</div>
                   <div className="achievement-content">
                     <div className="achievement-text">
-                      <strong>{achievement.childName}</strong> scored {achievement.score}% in {achievement.quizType}
+                      <strong>{achievement.childName}</strong> {t('analytics.scored')} {achievement.score}% {t('analytics.in')} {achievement.quizType}
                     </div>
                     <div className="achievement-date">{achievement.date}</div>
                   </div>
                 </div>
               ))
             ) : (
-              <p className="no-achievements">No recent achievements yet. Keep encouraging your children! 💪</p>
+              <p className="no-achievements">{t('analytics.noAchievementsYet')}</p>
             )}
           </div>
         </div>

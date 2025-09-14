@@ -84,11 +84,8 @@ const AssignedStudents: React.FC = () => {
   if (loading) {
     return (
       <div className="assigned-students">
-        <div className="loading-container">
-          <div className="loading-spinner">
-            <div className="spinner"></div>
-            <p>Loading assigned students...</p>
-          </div>
+        <div className="students-loading-simple">
+          <p>Loading assigned students...</p>
         </div>
       </div>
     );

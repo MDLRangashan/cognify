@@ -303,7 +303,7 @@ const StudentPerformanceReport: React.FC<StudentPerformanceReportProps> = ({
     doc.setTextColor(255, 255, 255);
     doc.setFontSize(24);
     doc.setFont('helvetica', 'bold');
-    doc.text('Assessment Analysis Report', 20, 25);
+    doc.text(t('common.assessmentAnalysisReport'), 20, 25);
     
     doc.setFontSize(12);
     doc.setFont('helvetica', 'normal');
@@ -316,22 +316,22 @@ const StudentPerformanceReport: React.FC<StudentPerformanceReportProps> = ({
     doc.setTextColor(textColor[0], textColor[1], textColor[2]);
     doc.setFontSize(16);
     doc.setFont('helvetica', 'bold');
-    doc.text('Performance Summary', 20, yPosition);
+    doc.text(t('common.performanceSummary'), 20, yPosition);
     yPosition += 15;
 
     // Summary cards
     const summaryData = [
-      ['Score', `${performanceData.score}/${performanceData.totalQuestions}`],
-      ['Accuracy', `${Math.round(performanceData.accuracy)}%`],
-      ['Time Taken', formatTime(performanceData.timeTaken)],
-      ['Level', performanceData.levelName || 'N/A'],
-      ['Difficulty', performanceData.levelDifficulty || 'Medium'],
-      ['Performance', performanceData.category]
+      [t('common.score'), `${performanceData.score}/${performanceData.totalQuestions}`],
+      [t('common.accuracy'), `${Math.round(performanceData.accuracy)}%`],
+      [t('common.time'), formatTime(performanceData.timeTaken)],
+      [t('common.level'), performanceData.levelName || 'N/A'],
+      [t('common.difficulty'), performanceData.levelDifficulty || 'Medium'],
+      [t('common.performance'), performanceData.category]
     ];
 
     autoTable(doc, {
       startY: yPosition,
-      head: [['Metric', 'Value']],
+      head: [[t('common.metric'), t('common.value')]],
       body: summaryData,
       theme: 'grid',
       headStyles: {
@@ -523,7 +523,7 @@ const StudentPerformanceReport: React.FC<StudentPerformanceReportProps> = ({
 
       autoTable(doc, {
         startY: yPosition,
-        head: [['Metric', 'Value']],
+        head: [[t('common.metric'), t('common.value')]],
         body: overviewData,
         theme: 'grid',
         headStyles: {
@@ -845,7 +845,7 @@ const StudentPerformanceReport: React.FC<StudentPerformanceReportProps> = ({
         <div className="performance-overview">
           <div className="overview-card">
             <div className="card-header">
-              <h3>🎯 {t('quiz.performance')} {t('common.category')}</h3>
+              <h3>🎯 {t('common.performanceCategory')}</h3>
             </div>
             <div className="category-info">
               <div 
@@ -857,10 +857,10 @@ const StudentPerformanceReport: React.FC<StudentPerformanceReportProps> = ({
               </div>
               <p className="category-description">
                 {levelProgress.performanceCategory.name === 'High Performer' 
-                  ? 'This student excels in math and is ready for advanced challenges!'
+                  ? t('common.highPerformerDescription')
                   : levelProgress.performanceCategory.name === 'Middle Performer'
-                  ? 'This student is making good progress and building solid math skills!'
-                  : 'This student is learning at their own pace with extra support and encouragement!'
+                  ? t('common.middlePerformerDescription')
+                  : t('common.lowPerformerDescription')
                 }
               </p>
             </div>
@@ -952,31 +952,31 @@ const StudentPerformanceReport: React.FC<StudentPerformanceReportProps> = ({
                     className="expand-btn"
                     onClick={() => toggleQuizExpansion(item.id)}
                   >
-                    {expandedQuiz === item.id ? '▼' : '▶'} View Analysis
+                    {expandedQuiz === item.id ? '▼' : '▶'} {t('common.viewAnalysis')}
                   </button>
                 </div>
                 <div className="history-details">
                   <div className="detail-item">
-                    <span className="detail-label">Score:</span>
+                    <span className="detail-label">{t('common.score')}:</span>
                     <span className="detail-value">{item.score}/{item.totalQuestions}</span>
                   </div>
                   <div className="detail-item">
-                    <span className="detail-label">Accuracy:</span>
+                    <span className="detail-label">{t('common.accuracy')}:</span>
                     <span className="detail-value">{Math.round(item.accuracy)}%</span>
                   </div>
                   <div className="detail-item">
-                    <span className="detail-label">Time:</span>
+                    <span className="detail-label">{t('common.time')}:</span>
                     <span className="detail-value">{formatTime(item.timeTaken)}</span>
                   </div>
                   {item.levelName && (
                     <div className="detail-item">
-                      <span className="detail-label">Level:</span>
+                      <span className="detail-label">{t('common.level')}:</span>
                       <span className="detail-value">{item.levelName}</span>
                     </div>
                   )}
                   {item.levelDifficulty && (
                     <div className="detail-item">
-                      <span className="detail-label">Difficulty:</span>
+                      <span className="detail-label">{t('common.difficulty')}:</span>
                       <span 
                         className="detail-value"
                         style={{ color: getDifficultyColor(item.levelDifficulty) }}
@@ -1013,9 +1013,9 @@ const StudentPerformanceReport: React.FC<StudentPerformanceReportProps> = ({
                           <button 
                             className="download-pdf-btn"
                             onClick={() => generatePDF(selectedItem)}
-                            title="Download as PDF"
+                            title={t('common.downloadAsPDF')}
                           >
-                            📄 Download PDF
+                            📄 {t('common.downloadPDF')}
                           </button>
                           <button 
                             className="close-analysis-btn"
@@ -1193,39 +1193,36 @@ const StudentPerformanceReport: React.FC<StudentPerformanceReportProps> = ({
       )}
 
       <div className="report-insights">
-        <h3>💡 Insights & Recommendations</h3>
+        <h3>💡 {t('common.insightsRecommendations')}</h3>
         <div className="insights-content">
           {averageAccuracy >= 80 ? (
             <div className="insight positive">
-              <h4>🌟 Excellent Performance!</h4>
-              <p>This student is performing exceptionally well with {averageAccuracy}% average accuracy. 
-                They're ready for more challenging material and advanced concepts.</p>
+              <h4>🌟 {t('common.excellentPerformance')}</h4>
+              <p>{t('common.excellentPerformanceText').replace('{accuracy}', averageAccuracy.toString())}</p>
             </div>
           ) : averageAccuracy >= 60 ? (
             <div className="insight neutral">
-              <h4>👍 Good Progress!</h4>
-              <p>This student is making steady progress with {averageAccuracy}% average accuracy. 
-                Continued practice will help them improve further.</p>
+              <h4>👍 {t('common.goodProgress')}</h4>
+              <p>{t('common.goodProgressText').replace('{accuracy}', averageAccuracy.toString())}</p>
             </div>
           ) : (
             <div className="insight supportive">
-              <h4>🌱 Building Confidence!</h4>
-              <p>This student is working hard to improve their math skills. 
-                Focus on building confidence and providing extra support where needed.</p>
+              <h4>🌱 {t('common.buildingConfidence')}</h4>
+              <p>{t('common.buildingConfidenceText')}</p>
             </div>
           )}
           
           {trend === 'improving' && (
             <div className="insight positive">
-              <h4>📈 Great Improvement!</h4>
-              <p>Recent performance shows positive trends. Keep encouraging this student!</p>
+              <h4>📈 {t('common.greatImprovement')}</h4>
+              <p>{t('common.greatImprovementText')}</p>
             </div>
           )}
           
           {trend === 'declining' && (
             <div className="insight supportive">
-              <h4>🤝 Extra Support Needed</h4>
-              <p>Recent performance shows some challenges. Consider providing additional support and encouragement.</p>
+              <h4>🤝 {t('common.extraSupportNeeded')}</h4>
+              <p>{t('common.extraSupportNeededText')}</p>
             </div>
           )}
         </div>

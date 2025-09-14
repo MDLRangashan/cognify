@@ -279,11 +279,8 @@ const ChildrenManagement: React.FC = () => {
   if (loading) {
     return (
       <div className="children-management">
-        <div className="loading-container">
-          <div className="loading-spinner">
-            <div className="spinner"></div>
-            <p>Loading children data...</p>
-          </div>
+        <div className="children-loading-simple">
+          <p>Loading children data...</p>
         </div>
       </div>
     );
@@ -297,7 +294,7 @@ const ChildrenManagement: React.FC = () => {
           className="add-child-btn"
           onClick={() => setShowAddForm(true)}
         >
-          + Add Child
+          + {t('childrenManagement.addChild')}
         </button>
       </div>
 
@@ -312,14 +309,14 @@ const ChildrenManagement: React.FC = () => {
       {showAddForm && (
         <div className="add-child-form">
           <div className="form-header">
-            <h3>{editingChild ? 'Edit Child Information' : 'Add New Child'}</h3>
+            <h3>{editingChild ? t('childrenManagement.editChildInformation') : t('childrenManagement.addNewChild')}</h3>
             <button className="close-btn" onClick={resetForm}>×</button>
           </div>
           
                      <form onSubmit={handleSubmit} className="child-form">
              <div className="form-row">
                <div className="form-group">
-                 <label htmlFor="firstName">First Name *</label>
+                 <label htmlFor="firstName">{t('childrenManagement.firstName')} *</label>
                  <input
                    type="text"
                    id="firstName"
@@ -330,7 +327,7 @@ const ChildrenManagement: React.FC = () => {
                  />
                </div>
                <div className="form-group">
-                 <label htmlFor="lastName">Last Name *</label>
+                 <label htmlFor="lastName">{t('childrenManagement.lastName')} *</label>
                  <input
                    type="text"
                    id="lastName"
@@ -344,7 +341,7 @@ const ChildrenManagement: React.FC = () => {
 
             <div className="form-row">
               <div className="form-group">
-                <label htmlFor="dateOfBirth">Date of Birth *</label>
+                <label htmlFor="dateOfBirth">{t('childrenManagement.dateOfBirth')} *</label>
                 <input
                   type="date"
                   id="dateOfBirth"
@@ -355,7 +352,7 @@ const ChildrenManagement: React.FC = () => {
                 />
               </div>
               <div className="form-group">
-                <label htmlFor="gender">Gender *</label>
+                <label htmlFor="gender">{t('childrenManagement.gender')} *</label>
                 <select
                   id="gender"
                   name="gender"
@@ -363,34 +360,34 @@ const ChildrenManagement: React.FC = () => {
                   onChange={handleInputChange}
                   required
                 >
-                  <option value="male">Male</option>
-                  <option value="female">Female</option>
-                  <option value="other">Other</option>
+                  <option value="male">{t('childrenManagement.male')}</option>
+                  <option value="female">{t('childrenManagement.female')}</option>
+                  <option value="other">{t('childrenManagement.other')}</option>
                 </select>
               </div>
             </div>
 
             <div className="form-row">
               <div className="form-group">
-                <label htmlFor="grade">Grade/Class</label>
+                <label htmlFor="grade">{t('childrenManagement.grade')}</label>
                 <input
                   type="text"
                   id="grade"
                   name="grade"
                   value={formData.grade}
                   onChange={handleInputChange}
-                  placeholder="e.g., 5th Grade, Class A"
+                  placeholder={t('childrenManagement.gradePlaceholder')}
                 />
               </div>
                              <div className="form-group">
-                 <label htmlFor="school">School</label>
+                 <label htmlFor="school">{t('childrenManagement.school')}</label>
                  <select
                    id="school"
                    name="school"
                    value={formData.school}
                    onChange={handleInputChange}
                  >
-                   <option value="">Select a school</option>
+                   <option value="">{t('childrenManagement.selectSchool')}</option>
                    {schools.length > 0 ? (
                      schools.map((school) => (
                        <option key={school.id} value={school.name}>
@@ -398,19 +395,19 @@ const ChildrenManagement: React.FC = () => {
                        </option>
                      ))
                    ) : (
-                     <option value="" disabled>No schools available</option>
+                     <option value="" disabled>{t('childrenManagement.noSchoolsAvailableOption')}</option>
                    )}
                  </select>
                  {schools.length === 0 && (
                    <small style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px', display: 'block' }}>
-                     No schools available. Please contact admin to add schools.
+                     {t('childrenManagement.noSchoolsAvailable')}
                    </small>
                  )}
                </div>
             </div>
 
             <div className="form-group">
-              <label htmlFor="assignedTeacherId">Assign Teacher *</label>
+              <label htmlFor="assignedTeacherId">{t('childrenManagement.assignTeacher')} *</label>
               <select
                 id="assignedTeacherId"
                 name="assignedTeacherId"
@@ -418,7 +415,7 @@ const ChildrenManagement: React.FC = () => {
                 onChange={handleTeacherChange}
                 required
               >
-                <option value="">Select a teacher</option>
+                <option value="">{t('childrenManagement.selectTeacher')}</option>
                 {teachers.length > 0 ? (
                   teachers.map((teacher) => (
                     <option key={teacher.id} value={teacher.id}>
@@ -426,18 +423,18 @@ const ChildrenManagement: React.FC = () => {
                     </option>
                   ))
                 ) : (
-                  <option value="" disabled>No teachers available</option>
+                  <option value="" disabled>{t('childrenManagement.noTeachersAvailableOption')}</option>
                 )}
               </select>
               {teachers.length === 0 && (
                 <small style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px', display: 'block' }}>
-                  No teachers available. Please contact admin to add teachers.
+                  {t('childrenManagement.noTeachersAvailable')}
                 </small>
               )}
             </div>
 
             <div className="form-group">
-              <label htmlFor="emergencyContact">Emergency Contact</label>
+              <label htmlFor="emergencyContact">{t('childrenManagement.emergencyContact')}</label>
               <input
                 type="text"
                 id="emergencyContact"
@@ -449,7 +446,7 @@ const ChildrenManagement: React.FC = () => {
             </div>
 
             <div className="form-group">
-              <label htmlFor="medicalInfo">Medical Information</label>
+              <label htmlFor="medicalInfo">{t('childrenManagement.medicalInformation')}</label>
               <textarea
                 id="medicalInfo"
                 name="medicalInfo"
@@ -461,7 +458,7 @@ const ChildrenManagement: React.FC = () => {
             </div>
 
                          <div className="form-group">
-               <label htmlFor="allergies">Allergies</label>
+               <label htmlFor="allergies">{t('childrenManagement.allergies')}</label>
                <input
                  type="text"
                  id="allergies"
@@ -474,10 +471,10 @@ const ChildrenManagement: React.FC = () => {
 
              {/* Login Details Section */}
              <div className="login-details-section">
-               <h4>Login Details</h4>
+               <h4>{t('childrenManagement.loginDetails')}</h4>
                <div className="form-row">
                  <div className="form-group">
-                   <label htmlFor="username">Username *</label>
+                   <label htmlFor="username">{t('childrenManagement.username')} *</label>
                    <input
                      type="text"
                      id="username"
@@ -485,11 +482,11 @@ const ChildrenManagement: React.FC = () => {
                      value={formData.username}
                      onChange={handleInputChange}
                      required
-                     placeholder="Choose a unique username for the child"
+                     placeholder={t('childrenManagement.usernamePlaceholder')}
                    />
                  </div>
                  <div className="form-group">
-                   <label htmlFor="password">Password *</label>
+                   <label htmlFor="password">{t('childrenManagement.password')} *</label>
                    <input
                      type="password"
                      id="password"

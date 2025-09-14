@@ -32,16 +32,18 @@ interface Student {
 
 interface QuizResult {
   id: string;
-  studentId: string;
-  studentName: string;
-  quizType: string;
-  level: string;
+  childId: string;
+  childName: string;
+  category: string;
+  levelName: string;
   score: number;
   totalQuestions: number;
   accuracy: number;
-  timeSpent: number;
-  timestamp: any;
-  performanceLevel: string;
+  timeTaken: number;
+  completedAt: Date;
+  levelId?: number;
+  levelDifficulty?: string;
+  detailedAnswers?: any[];
 }
 
 interface TeacherAnalyticsProps {
@@ -56,16 +58,31 @@ const TeacherAnalytics: React.FC<TeacherAnalyticsProps> = ({ assignedStudents })
   // Fetch quiz results for assigned students
   useEffect(() => {
     const fetchQuizResults = async () => {
+      console.log('=== TEACHER ANALYTICS DEBUG ===');
+      console.log('Assigned students:', assignedStudents);
+      console.log('Students count:', assignedStudents?.length);
+      
       if (!assignedStudents || assignedStudents.length === 0) {
+        console.log('No assigned students, setting loading to false');
         setLoading(false);
         return;
       }
 
       try {
         const studentIds = assignedStudents.map(student => student.id);
-        const quizResultsRef = collection(db, 'quizResults');
+        console.log('Student IDs for query:', studentIds);
         
-        let dateFilter;
+        // If no student IDs, return early
+        if (studentIds.length === 0) {
+          console.log('No student IDs found, returning empty results');
+          setQuizResults([]);
+          setLoading(false);
+          return;
+        }
+        
+        const performanceRef = collection(db, 'childrenPerformance');
+        
+        let dateFilter: Date | undefined;
         const now = new Date();
         if (timeRange === 'week') {
           dateFilter = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
@@ -73,41 +90,69 @@ const TeacherAnalytics: React.FC<TeacherAnalyticsProps> = ({ assignedStudents })
           dateFilter = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
         }
 
-        let q = query(
-          quizResultsRef,
-          where('studentId', 'in', studentIds),
-          orderBy('timestamp', 'desc')
-        );
-
+        // Use a simpler approach to avoid Firebase index requirements
+        // Get all performance data and filter in memory
+        let q = query(performanceRef);
+        
+        // If we have a date filter, we can still use it
         if (dateFilter) {
           q = query(
-            quizResultsRef,
-            where('studentId', 'in', studentIds),
-            where('timestamp', '>=', dateFilter),
-            orderBy('timestamp', 'desc')
+            performanceRef,
+            where('completedAt', '>=', dateFilter)
           );
         }
 
         const snapshot = await getDocs(q);
+        console.log('Firebase query snapshot size:', snapshot.size);
         const results: QuizResult[] = [];
         
         snapshot.forEach((doc) => {
           const data = doc.data();
-          results.push({
-            id: doc.id,
-            studentId: data.studentId,
-            studentName: data.studentName,
-            quizType: data.quizType || 'Unknown',
-            level: data.level || 'Unknown',
-            score: data.score || 0,
-            totalQuestions: data.totalQuestions || 0,
-            accuracy: data.accuracy || 0,
-            timeSpent: data.timeSpent || 0,
-            timestamp: data.timestamp,
-            performanceLevel: data.performanceLevel || 'Unknown'
-          });
+          console.log('Document data:', doc.id, data);
+          
+          // Check if this document belongs to one of our students
+          if (!studentIds.includes(data.childId)) {
+            console.log('Skipping document for different student:', data.childId);
+            return;
+          }
+          
+          // Apply date filter if needed (in case we couldn't use it in the query)
+          if (dateFilter && data.completedAt) {
+            const completedDate = data.completedAt.toDate ? data.completedAt.toDate() : new Date(data.completedAt);
+            if (completedDate < dateFilter) {
+              console.log('Skipping document due to date filter:', completedDate);
+              return;
+            }
+          }
+          
+          // Only include quizzes that have detailed answers (completed quizzes)
+          if (data.detailedAnswers && data.detailedAnswers.length > 0) {
+            console.log('Adding quiz result:', data.childName, data.category);
+            results.push({
+              id: doc.id,
+              childId: data.childId,
+              childName: data.childName,
+              category: data.category || 'Unknown',
+              levelName: data.levelName || 'Unknown',
+              score: data.score || 0,
+              totalQuestions: data.totalQuestions || 0,
+              accuracy: data.accuracy || 0,
+              timeTaken: data.timeTaken || 0,
+              completedAt: data.completedAt?.toDate() || new Date(),
+              levelId: data.levelId,
+              levelDifficulty: data.levelDifficulty,
+              detailedAnswers: data.detailedAnswers || []
+            });
+          } else {
+            console.log('Skipping quiz without detailed answers:', doc.id);
+          }
         });
+        
+        // Sort results by completedAt date (most recent first)
+        results.sort((a, b) => b.completedAt.getTime() - a.completedAt.getTime());
 
+        console.log('Fetched quiz results:', results.length, 'quizzes');
+        console.log('Quiz results data:', results);
         setQuizResults(results);
       } catch (error) {
         console.error('Error fetching quiz results:', error);
@@ -158,7 +203,7 @@ const TeacherAnalytics: React.FC<TeacherAnalyticsProps> = ({ assignedStudents })
       const dateStr = date.toISOString().split('T')[0];
       
       const dayQuizzes = quizResults.filter(result => {
-        const resultDate = result.timestamp?.toDate?.() || new Date(result.timestamp);
+        const resultDate = result.completedAt;
         return resultDate.toISOString().split('T')[0] === dateStr;
       });
 
@@ -173,7 +218,7 @@ const TeacherAnalytics: React.FC<TeacherAnalyticsProps> = ({ assignedStudents })
 
     // Student progress (individual student performance)
     const studentProgress = assignedStudents.map(student => {
-      const studentQuizzes = quizResults.filter(result => result.studentId === student.id);
+      const studentQuizzes = quizResults.filter(result => result.childId === student.id);
       const recentQuizzes = studentQuizzes.slice(0, 5); // Last 5 quizzes
       const averageAccuracy = recentQuizzes.length > 0
         ? recentQuizzes.reduce((sum, q) => sum + q.accuracy, 0) / recentQuizzes.length
@@ -184,7 +229,7 @@ const TeacherAnalytics: React.FC<TeacherAnalyticsProps> = ({ assignedStudents })
         quizzes: studentQuizzes.length,
         averageScore: Math.round(averageAccuracy),
         lastQuiz: studentQuizzes.length > 0 
-          ? studentQuizzes[0].timestamp?.toDate?.()?.toLocaleDateString() || 'Never'
+          ? studentQuizzes[0].completedAt?.toLocaleDateString() || 'Never'
           : 'Never'
       };
     });
@@ -217,8 +262,7 @@ const TeacherAnalytics: React.FC<TeacherAnalyticsProps> = ({ assignedStudents })
   if (loading) {
     return (
       <div className="teacher-analytics">
-        <div className="analytics-loading">
-          <div className="loading-spinner"></div>
+        <div className="analytics-loading-simple">
           <p>Loading analytics...</p>
         </div>
       </div>
