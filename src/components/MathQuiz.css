@@ -72,6 +72,13 @@
   border: 1px solid #f5c6cb;
 }
 
+.emotion-display {
+  margin-top: 4px;
+  font-size: 11px;
+  color: #047857;
+  font-weight: 600;
+}
+
 .camera-inactive {
   background-color: #fff3cd;
   color: #856404;

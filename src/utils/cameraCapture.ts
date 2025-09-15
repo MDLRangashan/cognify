@@ -1,11 +1,13 @@
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '../config/firebaseConfig';
+import { emotionAnalysisService, EmotionResponse } from '../services/emotionAnalysisService';
 
 export interface CameraCaptureOptions {
   childId: string;
   captureInterval: number; // in milliseconds
   onError?: (error: string) => void;
   onCapture?: (imageData: string) => void;
+  onEmotionAnalyzed?: (emotion: EmotionResponse) => void;
 }
 
 export class CameraCapture {
@@ -17,6 +19,7 @@ export class CameraCapture {
   private isCapturing = false;
   private options: CameraCaptureOptions;
   private capturedImages: string[] = [];
+  private emotionResponses: EmotionResponse[] = [];
 
   constructor(options: CameraCaptureOptions) {
     this.options = options;
@@ -91,19 +94,39 @@ export class CameraCapture {
 
       ctx.drawImage(this.video, 0, 0, this.canvas.width, this.canvas.height);
 
-      // Convert canvas to base64
+      // Convert canvas to base64 (for local storage)
       const imageData = this.canvas.toDataURL('image/jpeg', 0.8); // 80% quality
       
       // Add to captured images array
       this.capturedImages.push(imageData);
       
-      // Save to Firestore
-      await this.saveImageToFirestore(imageData);
+      // Convert canvas to blob for emotion analysis
+      try {
+        const imageBlob = await emotionAnalysisService.canvasToBlob(this.canvas);
+        console.log('Sending image to emotion analysis API...');
+        
+        // Analyze emotion
+        const emotionResponse = await emotionAnalysisService.analyzeEmotion(imageBlob);
+        this.emotionResponses.push(emotionResponse);
+        
+        console.log('Emotion analysis result:', emotionResponse);
+        
+        // Notify emotion callback
+        this.options.onEmotionAnalyzed?.(emotionResponse);
+        
+        // Save to Firestore with emotion data
+        await this.saveImageWithEmotionToFirestore(imageData, emotionResponse);
+        
+      } catch (emotionError) {
+        console.error('Error analyzing emotion:', emotionError);
+        // Still save image without emotion data
+        await this.saveImageToFirestore(imageData);
+      }
       
-      // Notify callback
+      // Notify capture callback
       this.options.onCapture?.(imageData);
       
-      console.log('Image captured and saved successfully');
+      console.log('Image captured and processed successfully');
     } catch (error) {
       console.error('Error capturing image:', error);
       this.options.onError?.(`Failed to capture image: ${error instanceof Error ? error.message : 'Unknown error'}`);
@@ -152,6 +175,37 @@ export class CameraCapture {
     }
   }
 
+  private async saveImageWithEmotionToFirestore(imageData: string, emotionResponse: EmotionResponse): Promise<void> {
+    try {
+      const imageDoc = {
+        childId: this.options.childId,
+        imageData: imageData,
+        timestamp: serverTimestamp(),
+        capturedAt: new Date().toISOString(),
+        quizType: 'initial_assessment',
+        emotion: emotionResponse.emotion,
+        emotionConfidence: emotionResponse.confidence,
+        emotionTimestamp: emotionResponse.timestamp,
+        emotionSuccess: emotionResponse.success
+      };
+
+      console.log('Saving image with emotion data to Firestore:', {
+        childId: this.options.childId,
+        imageDataLength: imageData.length,
+        capturedAt: imageDoc.capturedAt,
+        quizType: imageDoc.quizType,
+        emotion: emotionResponse.emotion,
+        confidence: emotionResponse.confidence
+      });
+
+      const docRef = await addDoc(collection(db, 'quizImages'), imageDoc);
+      console.log('Image with emotion data saved to Firestore successfully with ID:', docRef.id);
+    } catch (error) {
+      console.error('Error saving image with emotion data to Firestore:', error);
+      throw error;
+    }
+  }
+
   stopCapture(): void {
     this.isCapturing = false;
     
@@ -185,6 +239,41 @@ export class CameraCapture {
 
   isActive(): boolean {
     return this.isCapturing;
+  }
+
+  getEmotionResponses(): EmotionResponse[] {
+    return [...this.emotionResponses];
+  }
+
+  async saveEmotionSummary(): Promise<void> {
+    if (this.emotionResponses.length === 0) {
+      console.log('No emotion data to save');
+      return;
+    }
+
+    try {
+      const summary = emotionAnalysisService.calculateEmotionSummary(this.emotionResponses);
+      
+      const emotionSummaryDoc = {
+        childId: this.options.childId,
+        quizType: 'initial_assessment',
+        emotions: this.emotionResponses,
+        averageEmotion: summary.averageEmotion,
+        modeEmotion: summary.modeEmotion,
+        confidenceLevel: summary.confidenceLevel,
+        totalImages: this.emotionResponses.length,
+        analyzedAt: new Date(),
+        timestamp: serverTimestamp()
+      };
+
+      console.log('Saving emotion summary to Firestore:', emotionSummaryDoc);
+
+      const docRef = await addDoc(collection(db, 'emotionAnalysis'), emotionSummaryDoc);
+      console.log('Emotion summary saved to Firestore successfully with ID:', docRef.id);
+    } catch (error) {
+      console.error('Error saving emotion summary to Firestore:', error);
+      throw error;
+    }
   }
 
   // Static method to get images from localStorage

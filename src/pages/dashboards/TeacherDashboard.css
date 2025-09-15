@@ -405,21 +405,24 @@
 .actions-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 12px;
+  gap: 16px;
+  margin-top: 16px;
 }
 
 .action-btn {
   background: #f8fafc;
   border: 1px solid #e5e7eb;
-  padding: 16px;
+  padding: 20px 16px;
   border-radius: 12px;
   cursor: pointer;
   transition: all 0.3s ease;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 8px;
+  justify-content: center;
+  gap: 12px;
   text-align: center;
+  min-height: 80px;
 }
 
 .action-btn:hover {
@@ -430,13 +433,16 @@
 }
 
 .action-icon {
-  font-size: 24px;
+  font-size: 28px;
+  line-height: 1;
 }
 
 .action-text {
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 600;
   color: #374151;
+  line-height: 1.2;
+  margin: 0;
 }
 
 /* Reports Section */
@@ -677,6 +683,20 @@
   
   .actions-grid {
     grid-template-columns: 1fr;
+    gap: 12px;
+  }
+  
+  .action-btn {
+    min-height: 70px;
+    padding: 16px;
+  }
+  
+  .action-icon {
+    font-size: 24px;
+  }
+  
+  .action-text {
+    font-size: 12px;
   }
   
   .students-grid {

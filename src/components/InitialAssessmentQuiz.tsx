@@ -6,6 +6,7 @@ import { getPerformanceCategory, PerformanceCategory } from '../utils/performanc
 import { fetchInitialAssessmentQuiz, AdminQuiz } from '../utils/quizFetcher';
 import { CameraCapture, checkCameraAvailability } from '../utils/cameraCapture';
 import CameraPermissionDialog from './CameraPermissionDialog';
+import { EmotionResponse } from '../services/emotionAnalysisService';
 
 interface Question {
   id: number;
@@ -55,6 +56,8 @@ const InitialAssessmentQuiz: React.FC<InitialAssessmentQuizProps> = ({ onComplet
   const [capturedImagesCount, setCapturedImagesCount] = useState(0);
   const [showPermissionDialog, setShowPermissionDialog] = useState(false);
   const [cameraPermissionGranted, setCameraPermissionGranted] = useState(false);
+  const [emotionData, setEmotionData] = useState<EmotionResponse[]>([]);
+  const [currentEmotion, setCurrentEmotion] = useState<string>('unknown');
 
   // Initialize camera capture
   const initializeCameraCapture = async () => {
@@ -100,6 +103,13 @@ const InitialAssessmentQuiz: React.FC<InitialAssessmentQuizProps> = ({ onComplet
             console.log(`Total images captured so far: ${newCount}`);
             return newCount;
           });
+        },
+        onEmotionAnalyzed: (emotion) => {
+          console.log('Emotion analyzed:', emotion);
+          setEmotionData(prev => [...prev, emotion]);
+          if (emotion.success) {
+            setCurrentEmotion(emotion.emotion);
+          }
         }
       });
 
@@ -118,8 +128,16 @@ const InitialAssessmentQuiz: React.FC<InitialAssessmentQuizProps> = ({ onComplet
   };
 
   // Cleanup camera capture
-  const cleanupCameraCapture = () => {
+  const cleanupCameraCapture = async () => {
     if (cameraCapture) {
+      try {
+        // Save emotion summary before stopping
+        await cameraCapture.saveEmotionSummary();
+        console.log('Emotion summary saved successfully');
+      } catch (error) {
+        console.error('Error saving emotion summary:', error);
+      }
+      
       cameraCapture.stopCapture();
       setCameraCapture(null);
       setIsCameraActive(false);
@@ -289,7 +307,9 @@ const InitialAssessmentQuiz: React.FC<InitialAssessmentQuizProps> = ({ onComplet
   // Cleanup camera capture on component unmount
   useEffect(() => {
     return () => {
-      cleanupCameraCapture();
+      cleanupCameraCapture().catch(error => {
+        console.error('Error during component unmount camera cleanup:', error);
+      });
     };
   }, []);
 
@@ -446,7 +466,9 @@ const InitialAssessmentQuiz: React.FC<InitialAssessmentQuizProps> = ({ onComplet
     setQuizCompleted(true);
 
     // Stop camera capture when quiz finishes
-    cleanupCameraCapture();
+    cleanupCameraCapture().catch(error => {
+      console.error('Error during camera cleanup:', error);
+    });
 
     // Immediately submit so data is persisted even if the modal isn't interacted with
     if (!hasSubmittedRef.current && category) {
@@ -511,6 +533,12 @@ const InitialAssessmentQuiz: React.FC<InitialAssessmentQuizProps> = ({ onComplet
               {isCameraActive ? (
                 <div className="camera-active">
                   📹 Camera Active ({capturedImagesCount} photos) - Capturing every 5s
+                  {currentEmotion !== 'unknown' && (
+                    <div className="emotion-display">
+                      Current mood: {currentEmotion} {emotionData.length > 0 && emotionData[emotionData.length - 1]?.success ? 
+                        `(${Math.round(emotionData[emotionData.length - 1].confidence * 100)}%)` : ''}
+                    </div>
+                  )}
                 </div>
               ) : cameraError ? (
                 <div className="camera-error">

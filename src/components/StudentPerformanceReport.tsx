@@ -5,6 +5,8 @@ import { db } from '../config/firebaseConfig';
 import { collection, query, where, getDocs, limit } from 'firebase/firestore';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import { geminiService, AIInsightsResponse } from '../services/geminiService';
+import { emotionAnalysisService, EmotionAnalysisData } from '../services/emotionAnalysisService';
 
 // Extend jsPDF type to include autoTable
 declare module 'jspdf' {
@@ -80,6 +82,11 @@ const StudentPerformanceReport: React.FC<StudentPerformanceReportProps> = ({
   const [levelProgress, setLevelProgress] = useState<LevelProgress | null>(null);
   const [loading, setLoading] = useState(true);
   const [expandedQuiz, setExpandedQuiz] = useState<string | null>(null);
+  const [aiInsights, setAiInsights] = useState<AIInsightsResponse | null>(null);
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiError, setAiError] = useState<string | null>(null);
+  const [emotionAnalysis, setEmotionAnalysis] = useState<EmotionAnalysisData | null>(null);
+  const [emotionLoading, setEmotionLoading] = useState(false);
 
   const formatQuestionText = (text: string) => {
     if (!text) return '';
@@ -97,6 +104,42 @@ const StudentPerformanceReport: React.FC<StudentPerformanceReportProps> = ({
   useEffect(() => {
     fetchPerformanceData();
   }, [studentId]);
+
+  useEffect(() => {
+    if (performanceHistory.length > 0 && !loading) {
+      generateAIInsights();
+      fetchEmotionAnalysis();
+    }
+  }, [performanceHistory, loading]);
+
+  const fetchEmotionAnalysis = async () => {
+    try {
+      setEmotionLoading(true);
+      console.log('Fetching emotion analysis for student:', studentId);
+      
+      const emotionQuery = query(
+        collection(db, 'emotionAnalysis'),
+        where('childId', '==', studentId),
+        where('quizType', '==', 'initial_assessment')
+      );
+      
+      const emotionSnapshot = await getDocs(emotionQuery);
+      console.log('Emotion analysis query snapshot size:', emotionSnapshot.size);
+      
+      if (!emotionSnapshot.empty) {
+        // Get the most recent emotion analysis
+        const emotionData = emotionSnapshot.docs[0].data() as EmotionAnalysisData;
+        setEmotionAnalysis(emotionData);
+        console.log('Emotion analysis data loaded:', emotionData);
+      } else {
+        console.log('No emotion analysis data found for student:', studentId);
+      }
+    } catch (error) {
+      console.error('Error fetching emotion analysis:', error);
+    } finally {
+      setEmotionLoading(false);
+    }
+  };
 
   const fetchPerformanceData = async () => {
     try {
@@ -196,6 +239,39 @@ const StudentPerformanceReport: React.FC<StudentPerformanceReportProps> = ({
     }
   };
 
+  const generateAIInsights = async () => {
+    if (performanceHistory.length === 0) return;
+    
+    try {
+      setAiLoading(true);
+      setAiError(null);
+      
+      const averageAccuracy = calculateAverageAccuracy();
+      const averageTime = calculateAverageTime();
+      const trend = getPerformanceTrend();
+      
+      const request = {
+        studentName,
+        performanceHistory,
+        levelProgress,
+        averageAccuracy,
+        averageTime,
+        trend
+      };
+      
+      console.log('Generating AI insights for:', studentName);
+      const insights = await geminiService.generateInsights(request);
+      setAiInsights(insights);
+      console.log('AI insights generated:', insights);
+      
+    } catch (error) {
+      console.error('Error generating AI insights:', error);
+      setAiError('Failed to generate AI insights. Using fallback recommendations.');
+    } finally {
+      setAiLoading(false);
+    }
+  };
+
 
   const calculateAverageAccuracy = () => {
     if (performanceHistory.length === 0) return 0;
@@ -209,7 +285,7 @@ const StudentPerformanceReport: React.FC<StudentPerformanceReportProps> = ({
     return Math.round(totalTime / performanceHistory.length);
   };
 
-  const getPerformanceTrend = () => {
+  const getPerformanceTrend = (): 'improving' | 'declining' | 'stable' => {
     if (performanceHistory.length < 2) return 'stable';
     const recent = performanceHistory.slice(0, 3);
     const older = performanceHistory.slice(3, 6);
@@ -230,7 +306,7 @@ const StudentPerformanceReport: React.FC<StudentPerformanceReportProps> = ({
     return `${mins}m ${secs}s`;
   };
 
-  const getTrendIcon = (trend: string) => {
+  const getTrendIcon = (trend: 'improving' | 'declining' | 'stable') => {
     switch (trend) {
       case 'improving': return '📈';
       case 'declining': return '📉';
@@ -238,7 +314,7 @@ const StudentPerformanceReport: React.FC<StudentPerformanceReportProps> = ({
     }
   };
 
-  const getTrendColor = (trend: string) => {
+  const getTrendColor = (trend: 'improving' | 'declining' | 'stable') => {
     switch (trend) {
       case 'improving': return '#10b981';
       case 'declining': return '#ef4444';
@@ -1187,40 +1263,133 @@ const StudentPerformanceReport: React.FC<StudentPerformanceReportProps> = ({
         </div>
       )}
 
-      <div className="report-insights">
-        <h3>💡 {t('common.insightsRecommendations')}</h3>
-        <div className="insights-content">
-          {averageAccuracy >= 80 ? (
-            <div className="insight positive">
-              <h4>🌟 {t('common.excellentPerformance')}</h4>
-              <p>{t('common.excellentPerformanceText').replace('{accuracy}', averageAccuracy.toString())}</p>
+      {/* Emotion Analysis Section */}
+      {emotionAnalysis && (
+        <div className="emotion-analysis-section">
+          <h3>😊 Emotion Analysis During Quiz</h3>
+          <div className="emotion-content">
+            <div className="emotion-summary">
+              <div className="emotion-card primary">
+                <div className="emotion-icon">
+                  {emotionAnalysisService.getEmotionDisplay(emotionAnalysis.modeEmotion).emoji}
+                </div>
+                <div className="emotion-details">
+                  <h4>Most Common Emotion</h4>
+                  <p className="emotion-name" style={{ color: emotionAnalysisService.getEmotionDisplay(emotionAnalysis.modeEmotion).color }}>
+                    {emotionAnalysis.modeEmotion.charAt(0).toUpperCase() + emotionAnalysis.modeEmotion.slice(1)}
+                  </p>
+                  <p className="emotion-description">
+                    {emotionAnalysisService.getEmotionDisplay(emotionAnalysis.modeEmotion).description}
+                  </p>
+                </div>
+              </div>
+
+              <div className="emotion-stats">
+                <div className="stat-item">
+                  <span className="stat-label">Images Analyzed:</span>
+                  <span className="stat-value">{emotionAnalysis.totalImages}</span>
+                </div>
+                <div className="stat-item">
+                  <span className="stat-label">Average Emotion:</span>
+                  <span className="stat-value" style={{ color: emotionAnalysisService.getEmotionDisplay(emotionAnalysis.averageEmotion).color }}>
+                    {emotionAnalysis.averageEmotion.charAt(0).toUpperCase() + emotionAnalysis.averageEmotion.slice(1)}
+                  </span>
+                </div>
+              </div>
             </div>
-          ) : averageAccuracy >= 60 ? (
-            <div className="insight neutral">
-              <h4>👍 {t('common.goodProgress')}</h4>
-              <p>{t('common.goodProgressText').replace('{accuracy}', averageAccuracy.toString())}</p>
-            </div>
-          ) : (
-            <div className="insight supportive">
-              <h4>🌱 {t('common.buildingConfidence')}</h4>
-              <p>{t('common.buildingConfidenceText')}</p>
-            </div>
-          )}
-          
-          {trend === 'improving' && (
-            <div className="insight positive">
-              <h4>📈 {t('common.greatImprovement')}</h4>
-              <p>{t('common.greatImprovementText')}</p>
-            </div>
-          )}
-          
-          {trend === 'declining' && (
-            <div className="insight supportive">
-              <h4>🤝 {t('common.extraSupportNeeded')}</h4>
-              <p>{t('common.extraSupportNeededText')}</p>
-            </div>
-          )}
+
+          </div>
         </div>
+      )}
+
+      <div className="report-insights">
+        <h3>🤖 AI-Powered Insights & Recommendations</h3>
+        
+        {aiLoading ? (
+          <div className="ai-loading">
+            <div className="loading">🤖 AI is analyzing performance data...</div>
+          </div>
+        ) : aiError ? (
+          <div className="ai-error">
+            <p>⚠️ {aiError}</p>
+            <button onClick={generateAIInsights} className="retry-ai-btn">
+              🔄 Try Again
+            </button>
+          </div>
+        ) : aiInsights ? (
+          <div className="insights-content">
+            {/* AI Insights */}
+            {aiInsights.insights.length > 0 && (
+              <div className="insight-section">
+                <h4>💡 Key Insights</h4>
+                {aiInsights.insights.map((insight, index) => (
+                  <div key={index} className="insight ai-generated">
+                    <p>{insight}</p>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* AI Recommendations */}
+            {aiInsights.recommendations.length > 0 && (
+              <div className="insight-section">
+                <h4>🎯 Recommendations</h4>
+                {aiInsights.recommendations.map((recommendation, index) => (
+                  <div key={index} className="insight ai-generated">
+                    <p>{recommendation}</p>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* AI Strengths */}
+            {aiInsights.strengths.length > 0 && (
+              <div className="insight-section">
+                <h4>⭐ Strengths</h4>
+                {aiInsights.strengths.map((strength, index) => (
+                  <div key={index} className="insight positive">
+                    <p>{strength}</p>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* AI Areas for Improvement */}
+            {aiInsights.areasForImprovement.length > 0 && (
+              <div className="insight-section">
+                <h4>🌱 Areas for Improvement</h4>
+                {aiInsights.areasForImprovement.map((area, index) => (
+                  <div key={index} className="insight supportive">
+                    <p>{area}</p>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* AI Next Steps */}
+            {aiInsights.nextSteps.length > 0 && (
+              <div className="insight-section">
+                <h4>🚀 Next Steps</h4>
+                {aiInsights.nextSteps.map((step, index) => (
+                  <div key={index} className="insight neutral">
+                    <p>{step}</p>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            <div className="ai-footer">
+              <p>✨ Generated by Google Gemini AI</p>
+              <button onClick={generateAIInsights} className="refresh-ai-btn">
+                🔄 Refresh Insights
+              </button>
+            </div>
+          </div>
+        ) : (
+          <div className="no-insights">
+            <p>No performance data available for AI analysis.</p>
+          </div>
+        )}
       </div>
     </div>
   );
